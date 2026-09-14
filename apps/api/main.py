@@ -18,7 +18,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Header, Request
+from fastapi import Depends, FastAPI, Header, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import select
 
@@ -192,6 +192,22 @@ def create_app(
         if request.app.state.schedule_on_create:
             review_service.schedule(response.task.id)
         return response
+
+    @app.get("/api/v1/reviews", response_model=list[ReviewTaskResponse], tags=["reviews"])
+    async def list_reviews(
+        request: Request,
+        actor: Annotated[
+            Actor, Depends(require_roles(ActorRole.DEVELOPER, ActorRole.APPROVER, ActorRole.ADMIN))
+        ],
+        limit: int = Query(default=100, ge=1, le=200),
+    ) -> list[ReviewTaskResponse]:
+        """返回可回看的审查记录；普通提交者只看到自己创建的任务。"""
+        with get_container(request).session() as session:
+            rows = ReviewTaskStore(session).list_tasks(
+                actor_id=actor.actor_id if actor.role is ActorRole.DEVELOPER else None,
+                limit=limit,
+            )
+            return [task_response(row) for row in rows]
 
     @app.get("/api/v1/reviews/{task_id}", response_model=ReviewDetailResponse, tags=["reviews"])
     async def get_review(

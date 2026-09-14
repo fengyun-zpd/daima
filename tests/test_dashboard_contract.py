@@ -108,14 +108,13 @@ def test_dashboard_feature_contract_is_satisfied() -> None:
     """23 项界面能力契约（transport / ZIP 限制 / NEEDS_HUMAN / 按钮门禁 ...）。"""
     features = web_check.check_feature_contract()
     assert len(features) >= 20
-    assert "transport_显示" in features
+    assert "系统状态展示" in features
 
 
-def test_readyz_transport_is_typed_and_displayed() -> None:
-    types = _read(WEB / "src" / "types.ts")
+def test_dashboard_explains_system_status_without_exposing_transport_jargon() -> None:
     app = _read(WEB / "src" / "App.tsx")
-    assert "transport" in types, "ReadyStatus 必须声明 transport 字段"
-    assert "ready.transport" in app, "Dashboard 必须显示实际 transport"
+    assert "系统状态：可用" in app
+    assert "HTTP 协作通道" not in app
 
 
 def test_dashboard_reuses_idempotency_key_for_retries() -> None:
@@ -140,7 +139,7 @@ def test_dashboard_can_review_a_local_python_file_and_explain_a2a() -> None:
     form = _read(WEB / "src" / "components" / "CreateForm.tsx")
     timeline = _read(WEB / "src" / "components" / "Common.tsx")
     input_helpers = _read(WEB / "src" / "review-input.ts")
-    assert 'accept: ".py,text/x-python,application/x-python"' in form
+    assert 'accept: ".py,.zip,text/x-python,application/x-python,application/zip"' in form
     assert "onPythonFile" in form and "buildPythonFileDiff" in form
     assert "A2A 多 Agent 协作" in form and "代码审查 Agent" in form
     assert "A2A 协作过程" in timeline

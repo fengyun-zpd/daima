@@ -1,8 +1,8 @@
 /** 浏览器本地文件输入：把单个 Python 文件安全地转换成服务端支持的 unified diff。 */
 
-/** 与服务端单文件限制保持一致。 */
-export const MAX_PY_FILE_BYTES = 500 * 1024;
-export const MAX_DIFF_CHARS = 1024 * 1024;
+/** 与服务端工作区限制保持一致；生成 unified diff 后可能因每行前缀而接近两倍。 */
+export const MAX_PY_FILE_BYTES = 100 * 1024 * 1024;
+export const MAX_DIFF_CHARS = 200 * 1024 * 1024;
 
 function normalizePythonPath(rawPath: string): string {
   const path = rawPath.trim().replace(/\\/g, "/");

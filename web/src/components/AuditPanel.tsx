@@ -1,4 +1,4 @@
-/** 审计事件查看：按任务或 trace 过滤，展示 actor / action / 事件类型与状态摘要。 */
+/** 管理员排查记录：追查任务与 Agent 执行经过，普通审查无需查看。 */
 
 import React from "react";
 import type { AuditEvent } from "../types";
@@ -26,17 +26,18 @@ export function AuditPanel({
     React.createElement(
       "div",
       { className: "row" },
-      React.createElement("h2", { style: { flex: 1 } }, `系统审计（${filtered.length}）`),
-      React.createElement("button", { onClick: onRefresh }, "刷新"),
+      React.createElement("h2", { style: { flex: 1 } }, `管理员排查记录（${filtered.length}）`),
+      React.createElement("button", { onClick: onRefresh }, "刷新管理员记录"),
     ),
+    React.createElement("div", { className: "hint" }, "用于排查谁在何时创建了任务、Agent 执行到哪一步以及失败原因。普通审查不需要操作这里。"),
     React.createElement("input", {
-      placeholder: "过滤：事件类型 / 动作 / actor / 实体",
+      placeholder: "按操作人、任务编号或事件搜索",
       value: filter,
       onChange: (e) => setFilter(e.target.value),
     }),
     error ? React.createElement("div", { className: "error-box" }, error) : null,
     filtered.length === 0
-      ? React.createElement("div", { className: "muted" }, "切换为“管理员”身份后可查看系统审计记录。")
+      ? React.createElement("div", { className: "muted" }, "当前任务还没有可供管理员排查的事件。")
       : React.createElement(
           "table",
           null,
@@ -48,8 +49,8 @@ export function AuditPanel({
               null,
               React.createElement("th", null, "时间"),
               React.createElement("th", null, "事件"),
-              React.createElement("th", null, "actor"),
-              React.createElement("th", null, "实体"),
+              React.createElement("th", null, "操作人"),
+              React.createElement("th", null, "关联对象"),
               React.createElement("th", null, "摘要"),
             ),
           ),

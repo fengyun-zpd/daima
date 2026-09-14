@@ -211,14 +211,17 @@ class ReviewTaskStore:
         *,
         status: ParentTaskStatus | None = None,
         trace_id: str | None = None,
+        actor_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[ReviewTask]:
-        statement: Select = select(ReviewTask).order_by(ReviewTask.created_at.asc())
+        statement: Select = select(ReviewTask).order_by(ReviewTask.created_at.desc())
         if status is not None:
             statement = statement.where(ReviewTask.status == str(status))
         if trace_id is not None:
             statement = statement.where(ReviewTask.trace_id == trace_id)
+        if actor_id is not None:
+            statement = statement.where(ReviewTask.actor_id == actor_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.session.execute(statement).scalars())
 

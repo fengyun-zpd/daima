@@ -27,10 +27,12 @@ from domain.safepath import (
     normalize_path,
 )
 
-MAX_WORKSPACE_BYTES = 5_000_000
+# 本地工作台允许拖入至多 100 MiB 的代码文件或 ZIP；解压后的 Python 工作区也受此限制。
+# Diff 为单文件自动补齐 unified-diff 行前缀后可能显著变大，故单独允许 200 MiB。
+MAX_WORKSPACE_BYTES = 100 * 1024 * 1024
 MAX_ZIP_ENTRIES = 500
-MAX_FILE_BYTES = 500_000
-MAX_DIFF_BYTES = 2_000_000
+MAX_FILE_BYTES = MAX_WORKSPACE_BYTES
+MAX_DIFF_BYTES = 200 * 1024 * 1024
 
 
 @dataclass(slots=True)

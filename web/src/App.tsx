@@ -5,6 +5,7 @@ import { ApiError, CodePilotClient, OperationKeys, type Identity } from "./api";
 import { AuditPanel } from "./components/AuditPanel";
 import { ErrorBanner } from "./components/Common";
 import { CreateForm, type CreateFormValues } from "./components/CreateForm";
+import { HistoryPanel } from "./components/HistoryPanel";
 import {
   FindingsPanel,
   ImpactPanel,
@@ -20,6 +21,7 @@ import type {
   Patch,
   ReadyStatus,
   ReviewDetail,
+  ReviewTask,
   VerifyEvidenceView,
 } from "./types";
 
@@ -43,13 +45,15 @@ function readStoredIdentity(): Identity {
       /* 忽略损坏的本地存储 */
     }
   }
-  return { actorId: "dev-1", role: "developer" };
+  return { actorId: "dev-1", displayName: "", role: "developer" };
 }
 
 export default function App(): React.ReactElement {
   const [identity, setIdentity] = React.useState<Identity>(readStoredIdentity);
   const [taskId, setTaskId] = React.useState<string>("");
+  const [manualTaskId, setManualTaskId] = React.useState<string>("");
   const [detail, setDetail] = React.useState<ReviewDetail | null>(null);
+  const [history, setHistory] = React.useState<ReviewTask[]>([]);
   const [patches, setPatches] = React.useState<Patch[]>([]);
   const [audit, setAudit] = React.useState<AuditEvent[]>([]);
   const [ready, setReady] = React.useState<ReadyStatus | null>(null);
@@ -58,6 +62,7 @@ export default function App(): React.ReactElement {
   const [notice, setNotice] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [autoRefresh, setAutoRefresh] = React.useState(true);
+  const [historyLoading, setHistoryLoading] = React.useState(false);
 
   const client = React.useMemo(() => new CodePilotClient(identity), [identity]);
   // 用户操作级幂等键：同一次操作失败后重试复用同一个键，成功后清空。
@@ -105,6 +110,17 @@ export default function App(): React.ReactElement {
     [client, handleError],
   );
 
+  const loadHistory = React.useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      setHistory(await client.listReviews());
+    } catch (exc) {
+      handleError(exc);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [client, handleError]);
+
   const loadAudit = React.useCallback(
     async (id: string) => {
       if (identity.role !== "admin") {
@@ -130,6 +146,10 @@ export default function App(): React.ReactElement {
   React.useEffect(() => {
     void loadReady();
   }, [loadReady]);
+
+  React.useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
 
   React.useEffect(() => {
     if (!taskId) return;
@@ -175,10 +195,46 @@ export default function App(): React.ReactElement {
       );
       await refresh(created.task.id);
       await loadAudit(created.task.id);
+      await loadHistory();
     } catch (exc) {
       handleError(exc);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const openTask = async (id: string) => {
+    const nextId = id.trim();
+    if (!nextId) {
+      setError({ code: "TASK_ID_REQUIRED", message: "请先填写要打开的任务编号。" });
+      return;
+    }
+    setTaskId(nextId);
+    setManualTaskId(nextId);
+    setError(null);
+    await refresh(nextId);
+    await loadAudit(nextId);
+  };
+
+  const leaveTask = () => {
+    keys.clearAll();
+    setTaskId("");
+    setManualTaskId("");
+    setDetail(null);
+    setPatches([]);
+    setAudit([]);
+    setAuditError(null);
+    setError(null);
+    setNotice("已退出当前结果。历史记录已保留，现在可以放入下一份代码。");
+  };
+
+  const checkConnection = async () => {
+    try {
+      setReady(await client.readyz());
+      setError(null);
+      setNotice("服务连接正常。现在可以继续创建审查任务。");
+    } catch (exc) {
+      handleError(exc);
     }
   };
 
@@ -244,32 +300,28 @@ export default function App(): React.ReactElement {
         "span",
         { className: "muted" },
         ready
-          ? `系统已就绪 · ${ready.agents.length} 个 Agent 可协作 · ${ready.transport === "http" ? "HTTP 协作通道" : "本地协作通道"}`
+          ? `系统状态：可用 · ${ready.agents.length} 个 Agent 已就绪`
           : "系统连接中",
       ),
       React.createElement("div", { className: "spacer" }),
       React.createElement(
         "div",
         { className: "identity" },
-        React.createElement("span", null, "身份"),
+        React.createElement("span", null, "当前操作人"),
         React.createElement("input", {
-          style: { width: 120 },
+          style: { width: 100 },
+          value: identity.displayName ?? "",
+          placeholder: "姓名",
+          onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+            setIdentity({ ...identity, displayName: e.target.value }),
+        }),
+        React.createElement("input", {
+          style: { width: 110 },
           value: identity.actorId,
+          placeholder: "工号 / 账号",
           onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
             setIdentity({ ...identity, actorId: e.target.value }),
         }),
-        React.createElement(
-          "select",
-          {
-            style: { width: 120 },
-            value: identity.role,
-            onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-              setIdentity({ ...identity, role: e.target.value as Identity["role"] }),
-          },
-          React.createElement("option", { value: "developer" }, "开发者"),
-          React.createElement("option", { value: "approver" }, "审批者"),
-          React.createElement("option", { value: "admin" }, "管理员"),
-        ),
         React.createElement(
           "label",
           { style: { display: "flex", gap: 6, alignItems: "center", margin: 0 } },
@@ -279,9 +331,26 @@ export default function App(): React.ReactElement {
             checked: autoRefresh,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) => setAutoRefresh(e.target.checked),
           }),
-          "轮询刷新",
+          "审查中自动更新",
         ),
-        React.createElement("button", { onClick: () => void loadReady() }, "重连"),
+        React.createElement("button", { onClick: () => void checkConnection() }, "检查服务连接"),
+        React.createElement(
+          "details",
+          { className: "identity-settings" },
+          React.createElement("summary", null, "权限设置"),
+          React.createElement(
+            "select",
+            {
+              value: identity.role,
+              onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
+                setIdentity({ ...identity, role: e.target.value as Identity["role"] }),
+            },
+            React.createElement("option", { value: "developer" }, "提交审查"),
+            React.createElement("option", { value: "approver" }, "审核修复"),
+            React.createElement("option", { value: "admin" }, "系统管理员"),
+          ),
+          React.createElement("div", { className: "hint" }, "演示环境用此项模拟权限；正式系统会由统一登录自动填充。"),
+        ),
       ),
     ),
     React.createElement(
@@ -296,29 +365,37 @@ export default function App(): React.ReactElement {
         React.createElement(
           "div",
           { className: "panel" },
-          React.createElement("h2", null, "打开已有任务"),
-          React.createElement("label", null, "任务编号（仅在需要回看历史任务时填写）"),
+          React.createElement("h2", null, "按编号打开审查记录"),
+          React.createElement("label", null, "已有任务编号（手动粘贴，长度不限）"),
           React.createElement(
             "div",
             { className: "row" },
             React.createElement("input", {
-              value: taskId,
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => setTaskId(e.target.value.trim()),
-              placeholder: "task-01J...",
+              value: manualTaskId,
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => setManualTaskId(e.target.value),
+              placeholder: "把任务编号粘贴到这里",
             }),
-            React.createElement("button", { onClick: () => void refresh(taskId) }, "加载"),
+            React.createElement("button", { onClick: () => void openTask(manualTaskId) }, "打开这份记录"),
           ),
           React.createElement(
             "div",
             { className: "hint" },
-            "刚创建的任务会自动显示在右侧。任务处理期间会自动刷新，不需要手动操作。",
+            "刚创建的任务会自动显示在右侧。也可以直接从下方“审查历史”打开，不需要记住编号。",
           ),
         ),
-        React.createElement(AuditPanel, {
-          events: audit,
-          error: auditError,
-          onRefresh: () => void loadAudit(taskId),
+        React.createElement(HistoryPanel, {
+          tasks: history,
+          loading: historyLoading,
+          onOpen: (id) => void openTask(id),
+          onRefresh: () => void loadHistory(),
         }),
+        identity.role === "admin"
+          ? React.createElement(AuditPanel, {
+              events: audit,
+              error: auditError,
+              onRefresh: () => void loadAudit(taskId),
+            })
+          : null,
       ),
       React.createElement(
         "div",
@@ -328,6 +405,12 @@ export default function App(): React.ReactElement {
           : React.createElement(
               React.Fragment,
               null,
+              React.createElement(
+                "div",
+                { className: "task-toolbar" },
+                React.createElement("strong", null, `正在查看：${detail.task.id}`),
+                React.createElement("button", { type: "button", onClick: leaveTask }, "结束查看，准备下一份代码"),
+              ),
               React.createElement(TaskHeader, { detail }),
               React.createElement(ResumePanel, {
                 detail,

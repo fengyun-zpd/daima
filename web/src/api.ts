@@ -12,6 +12,7 @@ import type {
 
 export interface Identity {
   actorId: string;
+  displayName?: string;
   role: ActorRole;
 }
 
@@ -145,6 +146,10 @@ export class CodePilotClient {
 
   getReview(taskId: string): Promise<ReviewDetail> {
     return this.request<ReviewDetail>(`/api/v1/reviews/${taskId}`, { method: "GET" }, false);
+  }
+
+  listReviews(limit = 100): Promise<ReviewTask[]> {
+    return this.request<ReviewTask[]>(`/api/v1/reviews?limit=${limit}`, { method: "GET" }, false);
   }
 
   triggerFix(taskId: string, options: WriteOptions = {}): Promise<{ task_id: string; status: string; patch_id: string | null }> {

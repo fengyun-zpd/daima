@@ -44,6 +44,7 @@ REQUIRED_SOURCES = [
     "src/styles.css",
     "src/components/Common.tsx",
     "src/components/CreateForm.tsx",
+    "src/components/HistoryPanel.tsx",
     "src/components/TaskView.tsx",
     "src/components/AuditPanel.tsx",
 ]
@@ -56,6 +57,7 @@ PATH_LITERAL = re.compile(r"[`\"']((?:/(?:api|internal|healthz|readyz)[^`\"']*)?
 # 前端必须覆盖的工作台能力 -> 后端路径（用于证明不是"营销页"）
 REQUIRED_CAPABILITIES = {
     "create_review": "POST /api/v1/reviews",
+    "list_reviews": "GET /api/v1/reviews",
     "get_review": "GET /api/v1/reviews/{task_id}",
     "trigger_fix": "POST /api/v1/reviews/{task_id}/fixes",
     "list_patches": "GET /api/v1/reviews/{task_id}/patches",
@@ -174,18 +176,17 @@ def check_idempotency_headers() -> None:
 
 # Dashboard 必须覆盖的界面能力 -> 判定用的（文件, 必须出现的片段）
 FEATURE_CONTRACT: dict[str, tuple[str, tuple[str, ...]]] = {
-    "transport_显示": ("src/App.tsx", ("ready.transport",)),
-    "transport_类型": ("src/types.ts", ("transport:",)),
+    "系统状态展示": ("src/App.tsx", ("系统状态：可用", "ready.agents.length")),
     "运行模式选择": ("src/components/CreateForm.tsx", ('"single"', '"a2a"', '"offline"')),
-    "base_commit_输入": ("src/components/CreateForm.tsx", ("base_commit", "baseCommit")),
+    "base_commit_输入": ("src/components/CreateForm.tsx", ("baseCommit", "base_commit")),
     "上下文策略选择": ("src/components/CreateForm.tsx", ('"function"', '"minimal"', '"module"')),
     "ZIP_前端大小限制": ("src/components/CreateForm.tsx", ("MAX_ZIP_BYTES", "MAX_ZIP_BASE64_CHARS")),
     "本机Python文件审查": (
         "src/components/CreateForm.tsx",
-        ("onPythonFile", 'accept: ".py,text/x-python,application/x-python"', "buildPythonFileDiff"),
+        ("onPythonFile", 'accept: ".py,.zip,text/x-python,application/x-python,application/zip"', "buildPythonFileDiff"),
     ),
     "快速演示用例": ("src/review-input.ts", ("DEMO_CASES", '"secret-shell"', '"sql-concat"')),
-    "A2A协作说明": ("src/components/CreateForm.tsx", ("A2A 多 Agent 协作", "代码审查 Agent")),
+    "A2A协作说明": ("src/components/CreateForm.tsx", ("A2A 多 Agent 协作审查", "代码审查 Agent")),
     "A2A协作过程": ("src/components/Common.tsx", ("A2A 协作过程", "impact-agent", "技术详情")),
     "父任务状态展示": ("src/components/TaskView.tsx", ("StatusBadge", "detail.task.status")),
     "父子任务时间线": ("src/components/Common.tsx", ("TaskTimeline", "child.transport", "attempt")),
@@ -201,7 +202,9 @@ FEATURE_CONTRACT: dict[str, tuple[str, tuple[str, ...]]] = {
     "审计事件展示": ("src/components/AuditPanel.tsx", ("AuditEvent", "event.event_type", "actor_role")),
     "错误_code_message_trace": ("src/components/Common.tsx", ("error.code", "error.message", "trace_id")),
     "轮询至终态": ("src/App.tsx", ("setInterval", "clearInterval", "TERMINAL")),
-    "手动加载任务": ("src/App.tsx", ("打开已有任务", "refresh(taskId)")),
+    "手动加载任务": ("src/App.tsx", ("按编号打开审查记录", "manualTaskId", "openTask")),
+    "审查历史": ("src/components/HistoryPanel.tsx", ("审查历史", "查看这份审查结果")),
+    "退出当前审查": ("src/App.tsx", ("leaveTask", "结束查看，准备下一份代码")),
     "操作级幂等键复用": ("src/api.ts", ("class OperationKeys", "keyFor")),
     "生成补丁门禁": ("src/App.tsx", ('canFix: status === "REVIEWED"',)),
 }

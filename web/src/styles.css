@@ -61,6 +61,20 @@ body {
   color: var(--muted);
 }
 
+.identity-settings {
+  position: relative;
+}
+
+.identity-settings summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.identity-settings select {
+  margin-top: 6px;
+  width: 130px;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(320px, 380px) 1fr;
@@ -315,6 +329,94 @@ th {
   margin-bottom: 12px;
 }
 
+.drop-zone {
+  display: flex;
+  min-height: 128px;
+  margin-top: 10px;
+  padding: 16px;
+  border: 1px dashed #507ac0;
+  border-radius: 6px;
+  background: #121d2c;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.drop-zone.dragging {
+  border-color: var(--ok);
+  background: #10231b;
+}
+
+.drop-zone strong {
+  font-size: 14px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.file-ready {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid #23543f;
+  border-radius: 6px;
+  background: #10231b;
+  color: #a8f0cd;
+  font-size: 12px;
+}
+
+.history-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.history-item {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  background: var(--panel-alt);
+}
+
+.history-item button {
+  margin-top: 8px;
+}
+
+.history-id {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+}
+
+.history-empty {
+  padding: 12px 0 2px;
+}
+
+.task-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  font-size: 12px;
+}
+
 .badge.status-candidate,
 .badge.status-pending_approval,
 .badge.status-verified {
@@ -376,5 +478,10 @@ th {
   .identity {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .task-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

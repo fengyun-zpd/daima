@@ -113,7 +113,7 @@ class ParsedDiff:
         return {item.path: item.changed_lines for item in self.files}
 
 
-def parse_unified_diff(text: str, *, max_files: int = 200, max_bytes: int = 2_000_000) -> ParsedDiff:
+def parse_unified_diff(text: str, *, max_files: int = 200, max_bytes: int = 200 * 1024 * 1024) -> ParsedDiff:
     """解析 unified diff，任何非法结构都抛 ``INVALID_INPUT``。"""
     if not isinstance(text, str) or not text.strip():
         raise CodePilotError(ErrorCode.INVALID_INPUT, "Diff 内容为空")

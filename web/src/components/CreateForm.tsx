@@ -1,4 +1,4 @@
-/** 创建审查任务表单：支持 diff、项目 ZIP 与本机单个 Python 文件。 */
+/** 创建审查任务表单：让首次使用者从“放入代码”开始。 */
 
 import React from "react";
 
@@ -6,7 +6,6 @@ import {
   buildPythonFileDiff,
   DEMO_CASES,
   MAX_DIFF_CHARS,
-  MAX_PY_FILE_BYTES,
 } from "../review-input";
 
 export interface CreateFormValues {
@@ -19,12 +18,17 @@ export interface CreateFormValues {
 
 type InputMode = "diff" | "zip" | "python";
 
-/** 前端限制：ZIP 原文件大小与 base64 后的文本长度（后端另有解压体积与条目数限制）。 */
-export const MAX_ZIP_BYTES = 5 * 1024 * 1024;
-export const MAX_ZIP_BASE64_CHARS = 7 * 1024 * 1024;
+/** 文件原始大小最多 100 MiB；ZIP 编码和单文件 diff 封装后的请求由网关放行至 220 MiB。 */
+export const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+export const MAX_ZIP_BYTES = MAX_UPLOAD_BYTES;
+export const MAX_ZIP_BASE64_CHARS = Math.ceil((MAX_ZIP_BYTES / 3) * 4);
 export { MAX_DIFF_CHARS, MAX_PY_FILE_BYTES } from "../review-input";
 
-const DEFAULT_DIFF = DEMO_CASES[0].diff;
+const DEFAULT_BASE_COMMIT = "本次上传内容";
+
+function sizeLabel(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 2)} MB`;
+}
 
 async function encodeBase64(file: File): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -35,6 +39,12 @@ async function encodeBase64(file: File): Promise<string> {
   return btoa(binary);
 }
 
+const CONTEXT_HINT: Record<string, string> = {
+  minimal: "只看这次改动的代码行。速度最快，但上下文最少。",
+  function: "额外读取改动所在函数，通常足以判断问题，建议保持此选项。",
+  module: "额外读取改动所在的整个 Python 文件。适合需要理解更多关联逻辑的改动。",
+};
+
 export function CreateForm({
   onSubmit,
   busy,
@@ -42,66 +52,79 @@ export function CreateForm({
   onSubmit: (values: CreateFormValues) => void;
   busy: boolean;
 }): React.ReactElement {
-  const [inputMode, setInputMode] = React.useState<InputMode>("diff");
-  const [content, setContent] = React.useState(DEFAULT_DIFF);
-  const [pythonPath, setPythonPath] = React.useState("app/review_target.py");
+  const [inputMode, setInputMode] = React.useState<InputMode>("python");
+  const [content, setContent] = React.useState("");
+  const [pythonPath, setPythonPath] = React.useState("");
   const [pythonSource, setPythonSource] = React.useState("");
-  const [baseCommit, setBaseCommit] = React.useState("synthetic-base-001");
+  const [baseCommit, setBaseCommit] = React.useState(DEFAULT_BASE_COMMIT);
   const [contextPolicy, setContextPolicy] = React.useState("function");
   const [mode, setMode] = React.useState("a2a");
   const [formError, setFormError] = React.useState<string | null>(null);
   const [fileInfo, setFileInfo] = React.useState<string | null>(null);
+  const [dragging, setDragging] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const onZipFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_ZIP_BYTES) {
-      setFormError(
-        `ZIP 文件 ${(file.size / 1024 / 1024).toFixed(2)} MB 超过前端上限 ${(MAX_ZIP_BYTES / 1024 / 1024).toFixed(0)} MB，请拆分后再提交`,
-      );
+  const clearForm = () => {
+    setInputMode("python");
+    setContent("");
+    setPythonPath("");
+    setPythonSource("");
+    setBaseCommit(DEFAULT_BASE_COMMIT);
+    setContextPolicy("function");
+    setMode("a2a");
+    setFormError(null);
+    setFileInfo(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const receiveFile = async (file: File) => {
+    const lowerName = file.name.toLowerCase();
+    if (!lowerName.endsWith(".py") && !lowerName.endsWith(".zip")) {
+      setFormError("请放入 .py 文件或 Python 项目 .zip 文件。");
       setFileInfo(null);
       return;
     }
+    if (file.size > MAX_UPLOAD_BYTES || (lowerName.endsWith(".zip") && file.size > MAX_ZIP_BYTES)) {
+      setFormError(`文件 ${sizeLabel(file.size)} 超过前端上限 100 MB，请拆分后再提交。`);
+      setFileInfo(null);
+      return;
+    }
+
     try {
-      const encoded = await encodeBase64(file);
-      if (encoded.length > MAX_ZIP_BASE64_CHARS) {
-        setFormError("base64 编码后超过上限，请拆分后再提交");
-        setFileInfo(null);
-        return;
+      if (lowerName.endsWith(".zip")) {
+        const encoded = await encodeBase64(file);
+        if (encoded.length > MAX_ZIP_BASE64_CHARS) throw new Error("ZIP 编码后超过可提交大小，请拆分后再试。");
+        setInputMode("zip");
+        setContent(encoded);
+        setPythonPath("");
+        setPythonSource("");
+        setFileInfo(`${file.name} · ${sizeLabel(file.size)} · 已准备好审查项目中的 Python 文件`);
+      } else {
+        const source = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
+        if (!source.trim()) throw new Error("Python 文件内容不能为空。");
+        setInputMode("python");
+        setPythonPath(file.name);
+        setPythonSource(source);
+        setContent("");
+        setFileInfo(`${file.name} · ${sizeLabel(file.size)} · 已准备好审查`);
       }
-      setContent(encoded);
       setFormError(null);
-      setFileInfo(`${file.name} · ${(file.size / 1024).toFixed(1)} KB → base64 ${encoded.length} 字符`);
-    } catch {
-      setFormError("读取 ZIP 文件失败，请重新选择文件");
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "读取文件失败，请使用 UTF-8 编码后重试。");
       setFileInfo(null);
     }
   };
 
   const onPythonFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-    if (!file.name.toLowerCase().endsWith(".py")) {
-      setFormError("只能选择 .py 文件");
-      setFileInfo(null);
-      return;
-    }
-    if (file.size > MAX_PY_FILE_BYTES) {
-      setFormError(`Python 文件超过前端上限 ${(MAX_PY_FILE_BYTES / 1024).toFixed(0)} KB，请改用 ZIP 项目包`);
-      setFileInfo(null);
-      return;
-    }
-    try {
-      const source = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
-      if (!source.trim()) throw new Error("Python 文件内容不能为空");
-      setPythonPath(file.name);
-      setPythonSource(source);
-      setFormError(null);
-      setFileInfo(`${file.name} · ${(file.size / 1024).toFixed(1)} KB · 浏览器内转换为新增文件 diff`);
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : "读取 Python 文件失败，请使用 UTF-8 编码");
-      setFileInfo(null);
-    }
+    if (file) await receiveFile(file);
+  };
+
+  const onDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) await receiveFile(file);
   };
 
   const applyDemo = (id: string) => {
@@ -109,25 +132,26 @@ export function CreateForm({
     if (!selected) return;
     setInputMode("diff");
     setContent(selected.diff);
+    setPythonPath("");
+    setPythonSource("");
     setFormError(null);
     setFileInfo(`已载入演示用例：${selected.label}`);
   };
 
   const validate = (): string | null => {
-    if (!baseCommit.trim()) return "base_commit 不能为空";
     if (inputMode === "python") {
       try {
         buildPythonFileDiff(pythonPath, pythonSource);
       } catch (error) {
-        return error instanceof Error ? error.message : "Python 文件无法转换为审查输入";
+        return error instanceof Error ? error.message : "Python 文件无法转换为审查输入。";
       }
       return null;
     }
-    if (!content.trim()) return "内容不能为空";
+    if (!content.trim()) return inputMode === "zip" ? "请先拖入或选择 ZIP 文件。" : "请粘贴要审查的代码改动。";
     if (inputMode === "diff" && content.length > MAX_DIFF_CHARS) {
-      return `diff 文本 ${content.length} 字符超过上限 ${MAX_DIFF_CHARS}`;
+      return `代码改动文本超过 ${sizeLabel(MAX_DIFF_CHARS)} 上限，请拆分后再提交。`;
     }
-    if (inputMode === "zip" && content.length > MAX_ZIP_BASE64_CHARS) return "base64(ZIP) 超过上限";
+    if (inputMode === "zip" && content.length > MAX_ZIP_BASE64_CHARS) return "ZIP 文件超过 100 MB 上限。";
     return null;
   };
 
@@ -144,128 +168,124 @@ export function CreateForm({
         }
         const submittedContent = inputMode === "python" ? buildPythonFileDiff(pythonPath, pythonSource) : content;
         setFormError(null);
+        // 后端字段名为 base_commit；界面把它称作版本备注，避免让新用户误以为会读取本机 Git。
         onSubmit({
           inputType: inputMode === "zip" ? "zip" : "diff",
           content: submittedContent,
-          baseCommit,
+          baseCommit: baseCommit.trim() || DEFAULT_BASE_COMMIT,
           contextPolicy,
           mode,
         });
       },
     },
-    React.createElement("h2", null, "1. 选择要审查的代码"),
+    React.createElement("h2", null, "1. 放入要审查的代码"),
+    React.createElement("div", { className: "hint" }, "把文件拖到下方，或点击选择文件。支持 .py 和 Python 项目 .zip，单个文件最大 100 MB。"),
     React.createElement(
       "div",
-      { className: "hint" },
-      "选择一个本机 .py 文件即可开始；也可以提交多个文件组成的项目 ZIP，或粘贴 Git diff。",
+      {
+        className: `drop-zone${dragging ? " dragging" : ""}`,
+        onDragOver: (event: React.DragEvent<HTMLDivElement>) => {
+          event.preventDefault();
+          setDragging(true);
+        },
+        onDragLeave: () => setDragging(false),
+        onDrop,
+      },
+      React.createElement("strong", null, "拖入 .py 或 .zip 文件"),
+      React.createElement("span", { className: "muted" }, "也可以从此电脑选择文件"),
+      React.createElement("button", { type: "button", onClick: () => fileInputRef.current?.click() }, "选择本机文件"),
+      React.createElement("input", {
+        ref: fileInputRef,
+        className: "visually-hidden",
+        type: "file",
+        accept: ".py,.zip,text/x-python,application/x-python,application/zip",
+        onChange: onPythonFile,
+      }),
     ),
-    React.createElement("label", null, "代码来源"),
+    fileInfo ? React.createElement("div", { className: "file-ready" }, fileInfo) : null,
+    React.createElement("label", null, "没有文件时，可选择其他输入方式"),
     React.createElement(
       "select",
       {
         value: inputMode,
-        onChange: (e: React.ChangeEvent<HTMLSelectElement>) => {
-          setInputMode(e.target.value as InputMode);
+        onChange: (event: React.ChangeEvent<HTMLSelectElement>) => {
+          setInputMode(event.target.value as InputMode);
           setFormError(null);
         },
       },
-      React.createElement("option", { value: "diff" }, "粘贴代码改动（Diff）"),
+      React.createElement("option", { value: "python" }, "本机 Python 文件（推荐）"),
       React.createElement("option", { value: "zip" }, "Python 项目 ZIP"),
-      React.createElement("option", { value: "python" }, "本机 Python 文件（.py）"),
+      React.createElement("option", { value: "diff" }, "粘贴代码改动（Diff）"),
     ),
+    inputMode === "diff"
+      ? React.createElement(
+          React.Fragment,
+          null,
+          React.createElement("label", null, "粘贴代码改动"),
+          React.createElement("textarea", {
+            value: content,
+            onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => setContent(event.target.value),
+            placeholder: "粘贴 git diff 内容，例如以 diff --git 开头的代码改动。",
+            spellCheck: false,
+          }),
+        )
+      : null,
     React.createElement("label", null, "没有代码时，先试一个演示用例"),
     React.createElement(
       "select",
-      { defaultValue: "", onChange: (e: React.ChangeEvent<HTMLSelectElement>) => applyDemo(e.target.value) },
-      React.createElement("option", { value: "", disabled: true }, "选择后直接载入可审查的 diff"),
+      { defaultValue: "", onChange: (event: React.ChangeEvent<HTMLSelectElement>) => applyDemo(event.target.value) },
+      React.createElement("option", { value: "", disabled: true }, "选择一个示例后即可创建审查"),
       ...DEMO_CASES.map((item) => React.createElement("option", { key: item.id, value: item.id }, item.label)),
     ),
     React.createElement("h2", { style: { marginTop: 18 } }, "2. 选择审查方式"),
-    React.createElement("label", null, "协作方式"),
+    React.createElement("label", null, "审查方式"),
     React.createElement(
       "select",
-      { value: mode, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => setMode(e.target.value) },
-      React.createElement("option", { value: "a2a" }, "A2A 多 Agent 协作（推荐）"),
+      { value: mode, onChange: (event: React.ChangeEvent<HTMLSelectElement>) => setMode(event.target.value) },
+      React.createElement("option", { value: "a2a" }, "多 Agent 协作审查（推荐）"),
       React.createElement("option", { value: "single" }, "单 Agent 快速审查"),
-      React.createElement("option", { value: "offline" }, "离线规则扫描"),
+      React.createElement("option", { value: "offline" }, "本地规则扫描"),
     ),
     mode === "a2a"
       ? React.createElement(
           "div",
           { className: "a2a-callout" },
-          React.createElement("strong", null, "A2A 多 Agent 协作会做什么？"),
-          React.createElement(
-            "div",
-            null,
-            "代码审查 Agent 负责找问题，影响分析 Agent 负责判断改动范围；两者分别完成任务后，系统汇总结果。后续生成补丁时，修复 Agent 和验证 Agent 还会继续接力。",
-          ),
+          React.createElement("strong", null, "A2A 多 Agent 协作审查会做什么？"),
+          React.createElement("div", null, "代码审查 Agent 找问题，影响分析 Agent 判断改动会影响哪些地方；完成后系统汇总结果。生成修复建议时，修复 Agent 和验证 Agent 会继续接力。当前本地演示不需要填写 API Key。"),
         )
       : null,
     mode === "offline"
-      ? React.createElement("div", { className: "hint" }, "规则扫描只运行本地确定性检查，不进行多 Agent 协作，也不生成修复建议。")
+      ? React.createElement("div", { className: "hint" }, "本地规则扫描只运行固定检查，不使用多 Agent，也不会生成修复建议。")
       : null,
-    React.createElement("label", null, "对比基线（不确定时保持默认）"),
-    React.createElement("input", {
-      value: baseCommit,
-      onChange: (e: React.ChangeEvent<HTMLInputElement>) => setBaseCommit(e.target.value),
-    }),
-    React.createElement("label", null, "阅读代码范围"),
     React.createElement(
-      "select",
-      { value: contextPolicy, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => setContextPolicy(e.target.value) },
-      React.createElement("option", { value: "function" }, "改动附近的函数（推荐）"),
-      React.createElement("option", { value: "minimal" }, "最少必要代码"),
-      React.createElement("option", { value: "module" }, "相关的整个模块"),
+      "details",
+      { className: "technical-details" },
+      React.createElement("summary", null, "高级设置（一般不用改）"),
+      React.createElement("label", null, "审查时额外读取多少相关代码"),
+      React.createElement(
+        "select",
+        { value: contextPolicy, onChange: (event: React.ChangeEvent<HTMLSelectElement>) => setContextPolicy(event.target.value) },
+        React.createElement("option", { value: "function" }, "读取改动所在函数（推荐）"),
+        React.createElement("option", { value: "minimal" }, "只读取改动代码（更快）"),
+        React.createElement("option", { value: "module" }, "读取改动所在整个文件（更完整）"),
+      ),
+      React.createElement("div", { className: "hint" }, CONTEXT_HINT[contextPolicy]),
+      React.createElement("label", null, "本次审查的版本备注（可不填）"),
+      React.createElement("input", {
+        value: baseCommit,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) => setBaseCommit(event.target.value),
+        placeholder: DEFAULT_BASE_COMMIT,
+      }),
+      React.createElement("div", { className: "hint" }, "这里只是给历史记录看的版本说明。上传本机文件时保持默认即可；它不会读取或对比你电脑上的 Git 仓库。"),
     ),
-    inputMode === "python"
-      ? React.createElement(
-          React.Fragment,
-          null,
-          React.createElement("label", null, "从此电脑选择 .py 文件"),
-          React.createElement("input", {
-            type: "file",
-            accept: ".py,text/x-python,application/x-python",
-            onChange: onPythonFile,
-          }),
-          React.createElement("label", null, "项目内相对路径（不会提交本机绝对路径）"),
-          React.createElement("input", {
-            value: pythonPath,
-            onChange: (e: React.ChangeEvent<HTMLInputElement>) => setPythonPath(e.target.value),
-            placeholder: "app/review_target.py",
-          }),
-          React.createElement(
-            "div",
-            { className: "hint" },
-            `单文件上限 ${(MAX_PY_FILE_BYTES / 1024).toFixed(0)} KB，将作为新增文件进行审查；需要修复验证时请上传含 tests/ 的 ZIP 项目包。`,
-          ),
-        )
-      : React.createElement(
-          React.Fragment,
-          null,
-          React.createElement("label", null, inputMode === "zip" ? "选择 Python 项目 ZIP" : "Diff 内容"),
-          inputMode === "diff"
-            ? React.createElement("textarea", {
-                value: content,
-                onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => setContent(e.target.value),
-                spellCheck: false,
-              })
-            : React.createElement("input", { type: "file", accept: ".zip", onChange: onZipFile }),
-          inputMode === "zip"
-            ? React.createElement(
-                "div",
-                { className: "hint" },
-                `ZIP 前端上限 ${(MAX_ZIP_BYTES / 1024 / 1024).toFixed(0)} MB（解压体积与条目数由后端限制）`,
-              )
-            : null,
-        ),
-    fileInfo ? React.createElement("div", { className: "hint mono" }, fileInfo) : null,
     formError ? React.createElement("div", { className: "error-box" }, formError) : null,
-    React.createElement("h2", { style: { marginTop: 18 } }, "3. 创建并查看结果"),
+    React.createElement("h2", { style: { marginTop: 18 } }, "3. 创建审查并查看结果"),
     React.createElement(
       "div",
       { className: "row", style: { marginTop: 10 } },
-      React.createElement("button", { className: "primary", type: "submit", disabled: busy }, busy ? "提交中…" : "创建任务"),
-      React.createElement("span", { className: "hint" }, "创建后右侧会自动显示 A2A 协作进度和审查结论。"),
+      React.createElement("button", { className: "primary", type: "submit", disabled: busy }, busy ? "正在创建…" : "创建审查任务"),
+      React.createElement("button", { type: "button", disabled: busy, onClick: clearForm }, "清空，准备另一份代码"),
     ),
+    React.createElement("div", { className: "hint" }, "创建后，右侧会自动显示协作过程和审查结论。"),
   );
 }

@@ -22,7 +22,7 @@ COORDINATOR = {"X-Actor-Id": "coordinator", "X-Actor-Role": "coordinator"}
 
 #: 对外 API 的冻结清单（与 SRS §8、docs/03 §2 一致）。
 EXTERNAL_ROUTES: dict[str, set[str]] = {
-    "/api/v1/reviews": {"POST"},
+    "/api/v1/reviews": {"GET", "POST"},
     "/api/v1/reviews/{task_id}": {"GET"},
     "/api/v1/reviews/{task_id}/events": {"GET"},
     "/api/v1/reviews/{task_id}/comments": {"GET"},
@@ -77,6 +77,47 @@ def test_external_routes_match_documented_contract(client) -> None:
     for path, methods in EXTERNAL_ROUTES.items():
         assert path in routes, f"文档声明的对外路径缺失：{path}"
         assert methods <= routes[path], f"{path} 缺少方法 {methods - routes[path]}"
+
+
+def test_review_history_returns_newest_tasks_and_scopes_developer(client) -> None:
+    """审查历史可追溯，且普通提交者不会看到其他人的任务。"""
+    payload = {
+        "input_type": "diff",
+        "content": """diff --git a/app/main.py b/app/main.py
+--- a/app/main.py
++++ b/app/main.py
+@@ -0,0 +1 @@
++print('history')
+""",
+        "base_commit": "history-check",
+        "context_policy": "function",
+        "mode": "offline",
+    }
+    own = client.post(
+        "/api/v1/reviews",
+        json=payload,
+        headers={**DEVELOPER, "Idempotency-Key": "history-own-001"},
+    )
+    other = client.post(
+        "/api/v1/reviews",
+        json={**payload, "base_commit": "history-other"},
+        headers={"X-Actor-Id": "dev-2", "X-Actor-Role": "developer", "Idempotency-Key": "history-other-001"},
+    )
+    assert own.status_code == 200
+    assert other.status_code == 200
+
+    developer_history = client.get("/api/v1/reviews?limit=100", headers=DEVELOPER)
+    assert developer_history.status_code == 200
+    assert [task["id"] for task in developer_history.json()] == [own.json()["task"]["id"]]
+
+    admin_history = client.get(
+        "/api/v1/reviews?limit=100",
+        headers={"X-Actor-Id": "admin-1", "X-Actor-Role": "admin"},
+    )
+    assert [task["id"] for task in admin_history.json()][:2] == [
+        other.json()["task"]["id"],
+        own.json()["task"]["id"],
+    ]
 
 
 def test_internal_a2a_routes_match_documented_contract(client) -> None:

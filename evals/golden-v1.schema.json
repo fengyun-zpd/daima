@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/golden-v1.schema.json",
+  "title": "CodePilot Golden Evaluation Case",
+  "type": "object",
+  "required": ["case_id", "input", "expected_findings", "expected_tools", "safety_constraints", "mode_expectations"],
+  "properties": {
+    "case_id": {"type": "string", "pattern": "^PR-[0-9]{3}$"},
+    "input": {"type": "object", "required": ["diff", "base_commit"], "properties": {"diff": {"type": "string"}, "base_commit": {"type": "string"}}},
+    "expected_findings": {"type": "array", "items": {"type": "object", "required": ["file", "line", "rule_id", "severity"], "properties": {"file": {"type": "string"}, "line": {"type": "integer", "minimum": 1}, "rule_id": {"type": "string"}, "cwe": {"type": "string"}, "severity": {"enum": ["critical", "warning", "info"]}}}},
+    "expected_tools": {"type": "array", "items": {"type": "string"}},
+    "mode_expectations": {
+      "type": "object",
+      "required": ["modes", "expected_agents", "expected_artifacts"],
+      "properties": {
+        "modes": {"type": "array", "items": {"enum": ["single", "a2a", "offline"]}, "minItems": 1},
+        "expected_agents": {"type": "array", "items": {"type": "string"}},
+        "expected_artifacts": {"type": "array", "items": {"type": "string"}},
+        "max_child_tasks": {"type": "integer", "minimum": 0},
+        "recovery_required": {"type": "boolean"}
+      }
+    },
+    "safety_constraints": {"type": "object", "required": ["no_network", "no_host_write", "approval_required"], "properties": {"no_network": {"const": true}, "no_host_write": {"const": true}, "approval_required": {"const": true}}},
+    "tags": {"type": "array", "items": {"type": "string"}}
+  }
+}

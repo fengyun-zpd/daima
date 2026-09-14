@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-patch-candidate-v1.schema.json",
+  "title": "CodePilot PatchCandidate artifact v1",
+  "description": "Fix Agent 只返回候选补丁，不写任务分支（宪法第六条）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["patch_version", "patch_hash", "base_commit", "target_branch", "fix_category", "finding_refs", "changed_files", "changed_functions", "added_lines", "removed_lines", "diff", "idempotency_key"],
+  "properties": {
+    "patch_version": {"type": "integer", "minimum": 1},
+    "patch_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "base_commit": {"type": "string", "minLength": 1},
+    "target_branch": {"type": "string", "minLength": 1, "not": {"enum": ["main", "master", "develop"]}},
+    "fix_category": {"enum": ["hardcoded_secret", "shell_true", "sql_parameterization"]},
+    "finding_refs": {"type": "array", "items": {"type": "string"}},
+    "changed_files": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "changed_functions": {"type": "array", "items": {"type": "string"}},
+    "added_lines": {"type": "integer", "minimum": 0},
+    "removed_lines": {"type": "integer", "minimum": 0},
+    "diff": {"type": "string", "minLength": 1},
+    "idempotency_key": {"type": "string", "minLength": 8}
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-review-comment-v1.schema.json",
+  "title": "CodePilot ReviewComment artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["finding_ref", "message", "suggestion", "confidence_level", "impact_scope", "citations", "generated_by"],
+  "properties": {
+    "finding_ref": {"type": "string", "minLength": 1},
+    "message": {"type": "string", "minLength": 1},
+    "suggestion": {"type": "string"},
+    "confidence_level": {"enum": ["confirmed", "probable", "suspicious", "suppressed"]},
+    "impact_scope": {"type": "string"},
+    "citations": {"type": "array", "items": {"type": "string"}},
+    "generated_by": {"enum": ["rules", "llm", "rules+llm"]}
+  }
+}

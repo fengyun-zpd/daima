@@ -1,0 +1,12 @@
+{
+  "agent_id": "verify-agent",
+  "card_version": "1.0",
+  "protocol_versions": ["0.1"],
+  "capabilities": ["verify.prescan", "verify.lint", "verify.test", "verify.coverage"],
+  "input_schema": "VerifyTaskInput@1.0",
+  "output_schemas": ["VerifyEvidenceArtifact@1.0"],
+  "endpoint": "/internal/a2a/agents/verify-agent/tasks",
+  "auth": {"audience": "codepilot-coordinator", "scopes": ["task:receive"]},
+  "limits": {"max_steps": 15, "timeout_seconds": 45},
+  "status": "healthy"
+}

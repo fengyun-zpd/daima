@@ -1,0 +1,12 @@
+{
+  "agent_id": "fix-agent",
+  "card_version": "1.0",
+  "protocol_versions": ["0.1"],
+  "capabilities": ["fix.patch", "fix.candidate"],
+  "input_schema": "FixTaskInput@1.0",
+  "output_schemas": ["PatchCandidateArtifact@1.0", "PatchEvidenceArtifact@1.0"],
+  "endpoint": "/internal/a2a/agents/fix-agent/tasks",
+  "auth": {"audience": "codepilot-coordinator", "scopes": ["task:receive"]},
+  "limits": {"max_steps": 15, "timeout_seconds": 45},
+  "status": "healthy"
+}

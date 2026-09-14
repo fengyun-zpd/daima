@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-verify-evidence-v1.schema.json",
+  "title": "CodePilot VerifyEvidence artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["patch_version", "patch_hash", "sandbox_run_id", "sandbox_degraded", "degraded_reason", "exit_code", "apply_check", "pre_scan", "lint", "unit_tests", "regression", "coverage", "test_gap", "scope_drift", "evidence_sufficient", "tiers", "sanitized_output"],
+  "properties": {
+    "patch_version": {"type": "integer", "minimum": 1},
+    "patch_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "sandbox_run_id": {"type": "string", "minLength": 8},
+    "sandbox_degraded": {"type": "boolean"},
+    "degraded_reason": {"type": ["string", "null"]},
+    "exit_code": {"type": "integer"},
+    "apply_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "command", "message"],
+      "properties": {
+        "ok": {"type": "boolean"},
+        "command": {"type": "string"},
+        "message": {"type": "string"}
+      }
+    },
+    "pre_scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "blocked_patterns"],
+      "properties": {
+        "ok": {"type": "boolean"},
+        "blocked_patterns": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "lint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "tool", "exit_code", "issue_count", "summary"],
+      "properties": {
+        "ok": {"type": "boolean"},
+        "tool": {"type": "string"},
+        "exit_code": {"type": "integer"},
+        "issue_count": {"type": "integer", "minimum": 0},
+        "summary": {"type": "string"}
+      }
+    },
+    "unit_tests": {"$ref": "#/$defs/TestResult"},
+    "regression": {"$ref": "#/$defs/RegressionResult"},
+    "coverage": {"$ref": "#/$defs/CoverageResult"},
+    "test_gap": {"type": "boolean"},
+    "scope_drift": {"type": "boolean"},
+    "evidence_sufficient": {"type": "boolean"},
+    "tiers": {"type": "array", "items": {"$ref": "#/$defs/TierResult"}},
+    "sanitized_output": {"type": "string"}
+  },
+  "$defs": {
+    "TestResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "passed", "failed", "errors", "total", "duration_seconds"],
+      "properties": {
+        "ok": {"type": "boolean"},
+        "passed": {"type": "integer", "minimum": 0},
+        "failed": {"type": "integer", "minimum": 0},
+        "errors": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 0},
+        "duration_seconds": {"type": "number", "minimum": 0}
+      }
+    },
+    "RegressionResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "baseline_failed_total", "baseline_failed_fixed", "pass_rate"],
+      "properties": {
+        "ok": {"type": "boolean"},
+        "baseline_failed_total": {"type": "integer", "minimum": 0},
+        "baseline_failed_fixed": {"type": "integer", "minimum": 0},
+        "pass_rate": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "CoverageResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after", "delta", "source"],
+      "properties": {
+        "before": {"type": ["number", "null"]},
+        "after": {"type": ["number", "null"]},
+        "delta": {"type": ["number", "null"]},
+        "source": {"enum": ["coverage.py", "unavailable"]}
+      }
+    },
+    "TierResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tier", "ok", "detail"],
+      "properties": {
+        "tier": {"enum": ["prescan", "apply_check", "lint", "unit_test", "regression", "coverage"]},
+        "ok": {"type": "boolean"},
+        "detail": {"type": "string"}
+      }
+    }
+  }
+}

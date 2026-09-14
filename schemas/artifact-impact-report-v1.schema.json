@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-impact-report-v1.schema.json",
+  "title": "CodePilot ImpactReport artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["changed_symbols", "direct_callers", "direct_callees", "affected_files", "risk_level", "uncertain", "dynamic_calls", "symbol_details", "call_graph", "stats", "analyzers"],
+  "properties": {
+    "changed_symbols": {"type": "array", "items": {"type": "string"}},
+    "direct_callers": {"type": "array", "items": {"type": "string"}},
+    "direct_callees": {"type": "array", "items": {"type": "string"}},
+    "affected_files": {"type": "array", "items": {"type": "string"}},
+    "risk_level": {"enum": ["low", "medium", "high"]},
+    "uncertain": {"type": "boolean"},
+    "dynamic_calls": {"type": "array", "items": {"type": "string"}},
+    "symbol_details": {"type": "array", "items": {"$ref": "#/$defs/ChangedSymbol"}},
+    "call_graph": {"type": "array", "items": {"$ref": "#/$defs/CallEdge"}},
+    "stats": {"$ref": "#/$defs/ImpactStats"},
+    "analyzers": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "ChangedSymbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "file", "line", "changed_lines"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["function", "method", "class", "module"]},
+        "file": {"type": "string", "minLength": 1},
+        "line": {"type": "integer", "minimum": 1},
+        "changed_lines": {"type": "array", "items": {"type": "integer", "minimum": 1}}
+      }
+    },
+    "CallEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caller", "callee", "file", "line"],
+      "properties": {
+        "caller": {"type": "string", "minLength": 1},
+        "callee": {"type": "string", "minLength": 1},
+        "file": {"type": "string", "minLength": 1},
+        "line": {"type": "integer", "minimum": 1}
+      }
+    },
+    "ImpactStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["changed_symbol_count", "affected_file_count", "caller_count", "callee_count"],
+      "properties": {
+        "changed_symbol_count": {"type": "integer", "minimum": 0},
+        "affected_file_count": {"type": "integer", "minimum": 0},
+        "caller_count": {"type": "integer", "minimum": 0},
+        "callee_count": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

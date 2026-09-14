@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/a2a-message-v1.schema.json",
+  "title": "CodePilot A2A Message v1",
+  "description": "Message 只传递控制信息、摘要和引用；大内容放入 Artifact 存储（docs/05 §4）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["message_id", "task_id", "type", "role", "correlation_id", "artifact_refs", "error", "created_at"],
+  "properties": {
+    "message_id": {"type": "string", "minLength": 8},
+    "task_id": {"type": "string", "minLength": 8},
+    "type": {"type": "string", "minLength": 1},
+    "role": {"enum": ["coordinator", "agent", "system"]},
+    "correlation_id": {"type": "string", "minLength": 8},
+    "artifact_refs": {"type": "array", "items": {"type": "string"}},
+    "error": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {"type": "string", "minLength": 1},
+        "message": {"type": "string"}
+      }
+    },
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}

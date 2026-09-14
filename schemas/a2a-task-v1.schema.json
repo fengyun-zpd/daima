@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/a2a-task-v1.schema.json",
+  "title": "CodePilot A2A Task v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "parent_task_id", "trace_id", "agent_id", "task_type", "protocol_version", "status", "required_output_types", "deadline", "attempt", "idempotency_key", "correlation_id", "state_version"],
+  "properties": {
+    "task_id": {"type": "string", "minLength": 8},
+    "parent_task_id": {"type": ["string", "null"]},
+    "trace_id": {"type": "string", "minLength": 8},
+    "agent_id": {"type": "string"},
+    "task_type": {"enum": ["review", "impact", "fix", "verify"]},
+    "protocol_version": {"const": "0.1"},
+    "status": {"enum": ["submitted", "working", "input_required", "completed", "failed", "canceled"]},
+    "input_artifacts": {"type": "array", "items": {"type": "string"}},
+    "required_output_types": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "deadline": {"type": "string", "format": "date-time"},
+    "attempt": {"type": "integer", "minimum": 1, "maximum": 2},
+    "idempotency_key": {"type": "string", "minLength": 8},
+    "correlation_id": {"type": "string", "minLength": 8},
+    "state_version": {"type": "integer", "minimum": 1}
+  }
+}

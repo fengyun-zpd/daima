@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-patch-evidence-v1.schema.json",
+  "title": "CodePilot PatchEvidence artifact v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["patch_version", "patch_hash", "changed_files", "changed_functions", "scope_drift", "scope_drift_files", "wide_impact", "coverage_before", "coverage_after", "coverage_delta", "test_gap", "sandbox_run_id", "reasons"],
+  "properties": {
+    "patch_version": {"type": "integer", "minimum": 1},
+    "patch_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "changed_files": {"type": "array", "items": {"type": "string"}},
+    "changed_functions": {"type": "array", "items": {"type": "string"}},
+    "scope_drift": {"type": "boolean"},
+    "scope_drift_files": {"type": "array", "items": {"type": "string"}},
+    "wide_impact": {"type": "boolean"},
+    "coverage_before": {"type": ["number", "null"]},
+    "coverage_after": {"type": ["number", "null"]},
+    "coverage_delta": {"type": ["number", "null"]},
+    "test_gap": {"type": "boolean"},
+    "sandbox_run_id": {"type": ["string", "null"]},
+    "reasons": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-finding-v1.schema.json",
+  "title": "CodePilot Finding artifact v1",
+  "description": "Review Agent 的 Finding 产物。Finding@1.0 是一个集合型 Artifact，items 为 FindingItem。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rule_set_version", "scan_mode", "degraded_reason", "files_scanned", "findings", "stats"],
+  "properties": {
+    "rule_set_version": {"type": "string", "minLength": 1},
+    "scan_mode": {"enum": ["ast", "text", "mixed"]},
+    "degraded_reason": {"type": ["string", "null"]},
+    "files_scanned": {"type": "array", "items": {"type": "string"}},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/FindingItem"}},
+    "stats": {"$ref": "#/$defs/FindingStats"}
+  },
+  "$defs": {
+    "FindingItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule_id", "title", "cwe", "severity", "file", "line", "evidence", "message", "confidence_base", "confidence", "confidence_level", "auto_fixable", "fix_category", "in_changed_lines", "context_confirmed", "symbol", "rule_version"],
+      "properties": {
+        "rule_id": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1},
+        "cwe": {"type": "string"},
+        "severity": {"enum": ["critical", "warning", "info"]},
+        "file": {"type": "string", "minLength": 1},
+        "line": {"type": "integer", "minimum": 1},
+        "evidence": {"type": "string"},
+        "message": {"type": "string"},
+        "confidence_base": {"type": "number", "minimum": 0, "maximum": 1},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "confidence_level": {"enum": ["confirmed", "probable", "suspicious", "suppressed"]},
+        "auto_fixable": {"type": "boolean"},
+        "fix_category": {"type": ["string", "null"], "enum": ["hardcoded_secret", "shell_true", "sql_parameterization", null]},
+        "in_changed_lines": {"type": "boolean"},
+        "context_confirmed": {"type": "boolean"},
+        "symbol": {"type": ["string", "null"]},
+        "rule_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "FindingStats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "by_severity", "by_confidence_level", "suppressed"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "by_severity": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "by_confidence_level": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "suppressed": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+# 构建上下文剔除项：这些目录要么在镜像内重建，要么与本镜像无关。
+.git
+.github
+__pycache__
+**/__pycache__
+*.py[cod]
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+node_modules
+**/node_modules
+web/dist
+var
+.env

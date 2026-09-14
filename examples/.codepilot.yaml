@@ -1,0 +1,51 @@
+version: 1
+project:
+  language: python
+  base_branch: synthetic-main
+  context_policy: function
+mode: a2a
+a2a:
+  protocol_version: "0.1"
+  coordinator_id: coordinator
+  child_task_timeout_seconds: 45
+  max_parallel_children: 2
+  retry_limit: 1
+  allow_agents: [review-agent, impact-agent, fix-agent, verify-agent]
+  artifact_schema_version: "1.0"
+  fallback_mode: single
+  evaluation_compare_modes: true
+rules:
+  config_precedence: [cli, project, directory, global]
+  # 留空 = 启用全部规则（默认，也是黄金集评测要求的全量口径）。
+  # 如需只跑子集，在此显式列出 rule_id，例如：
+  #   enabled: [R001_SQL_CONCAT, R002_HARDCODED_SECRET, R003_SHELL_TRUE]
+  # 注意：一旦在这里写了子集，Review 只会产出该子集的 Finding，
+  # 黄金集 recall 会随之下降（历史缺陷：默认值曾只开 3 条规则，导致 20 用例全量评测 recall=0.20）。
+  enabled: []
+  severity_overrides: {}
+agent:
+  max_steps: 15
+  max_retries: 2
+  budget:
+    tokens: 12000
+    tool_calls: 30
+  loop_detection_threshold: 3
+fix:
+  allowed_categories: [hardcoded_secret, shell_true, sql_parameterization]
+  wide_impact_file_threshold: 5
+  sql_placeholder: "%s"
+sandbox:
+  network: none
+  user: sandbox
+  read_only_rootfs: true
+  tmpfs_mb: 64
+  cpu: 1
+  memory_mb: 512
+  disk_mb: 100
+  timeout_seconds: 60
+  drop_capabilities: all
+  no_new_privileges: true
+evaluation:
+  dataset: golden-v1
+  runs_per_case: 3
+  modes: [single, a2a, offline]

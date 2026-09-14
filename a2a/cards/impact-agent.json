@@ -1,0 +1,12 @@
+{
+  "agent_id": "impact-agent",
+  "card_version": "1.0",
+  "protocol_versions": ["0.1"],
+  "capabilities": ["impact.ast", "impact.callgraph", "impact.symbols"],
+  "input_schema": "ImpactTaskInput@1.0",
+  "output_schemas": ["ImpactReportArtifact@1.0"],
+  "endpoint": "/internal/a2a/agents/impact-agent/tasks",
+  "auth": {"audience": "codepilot-coordinator", "scopes": ["task:receive"]},
+  "limits": {"max_steps": 15, "timeout_seconds": 45},
+  "status": "healthy"
+}

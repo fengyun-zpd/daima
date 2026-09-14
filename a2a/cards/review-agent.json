@@ -1,0 +1,12 @@
+{
+  "agent_id": "review-agent",
+  "card_version": "1.0",
+  "protocol_versions": ["0.1"],
+  "capabilities": ["review.rules", "review.explain", "review.context"],
+  "input_schema": "ReviewTaskInput@1.0",
+  "output_schemas": ["FindingArtifact@1.0", "ReviewCommentArtifact@1.0"],
+  "endpoint": "/internal/a2a/agents/review-agent/tasks",
+  "auth": {"audience": "codepilot-coordinator", "scopes": ["task:receive"]},
+  "limits": {"max_steps": 15, "timeout_seconds": 45},
+  "status": "healthy"
+}

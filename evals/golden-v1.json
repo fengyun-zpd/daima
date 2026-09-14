@@ -1,0 +1,1014 @@
+{
+  "dataset": "golden-v1",
+  "cases": [
+    {
+      "case_id": "PR-001",
+      "title": "SQL 字符串拼接",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXR/NI80KAQAAQwEAAAsAAABhcHAvbWFpbi5weVNSUgquzCvJSC3JTFbIzU8pzUlVSMsvUkgtS8wpTSzJzM/TU1JS4uJKSU1TyMsvyk3MySxO1QBJpmpacSkAAVD62fQFz/fsejlz+/NZLS/2tT7tWvm0fe+zqRve7+l5PmXFk119T/bPfbG+EcTe1/1kx9qn/auezel8sqPhyY5VT/vXP+2f8bxp5+OGJpBNICMz0xTANihkFiv45eelQiwCgaLUktKiPAWoOiivuKQI6iI9IDOzQEOTCwRATk7LzEuJLy1OLdJILi0qzi/SUchLzIW5HKodIqOXWpGaXFqSqqEU7Orj6hyioKXgFuTvqwDSXKwQ7uEa5ArWa6uupKANZgEpJXUlTS4AUEsDBBQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAdGVzdHMvdGVzdF9tYWluLnB5dY7BCoJAFEX38xWPaaNQUtDKnaFBCDlkEK2GAV8wqPMm31j091mBu+7uXs6Ba3tPQwBiIYgTdA87kEsYQ4M3M3YhkplS+lyVxVEuQQbksArUopPxPyHfaZXV9aU65bPiDfOThua/lamDLovrbLT4mmAhJgA+g+6pGTvU9nuYozgVMOVXwXif9MY6gAU4upsU9tv1RrwBUEsBAhQAFAAAAAgAAAAtXQAAAAACAAAAAAAAAA8AAAAAAAAAAAAAAIABAAAAAGFwcC9fX2luaXRfXy5weVBLAQIUABQAAAAIAAAALV0fzSPNCgEAAEMBAAALAAAAAAAAAAAAAACAAS8AAABhcHAvbWFpbi5weVBLAQIUABQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAAAAAAAAAAACAAWIBAAB0ZXN0cy90ZXN0X21haW4ucHlQSwUGAAAAAAMAAwC2AAAAKAIAAAAA"
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 13,
+          "rule_id": "R001_SQL_CONCAT",
+          "cwe": "CWE-89",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "sql",
+        "injection"
+      ]
+    },
+    {
+      "case_id": "PR-002",
+      "title": "硬编码密钥",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXezCi/nnAAAABgEAAAsAAABhcHAvbWFpbi5weVNSUgquzCvJSC3JTFbIzU8pzUlVSMsvUkgtS8wpTSzJzM/TU1JS4srMLcgvKlHIL+biSklNU8jLL8pNzMksTtUAKUvVtOJSAAKgwmfTFzzfs+vlzO3PZ7W82Nf6tGvl0/a9z6ZueL+n5/mUFU929T3ZP/fF+kYQe1/3kx1rn/avejan88mOhic7Vj3tX/+0f8bzpp2PG5pAdoKMzExTANugkFms4JeflwqxCASKUktKi/IUoOqgvOKSIqiL9IDMzAINTS4QcAzwjPd2jVSwVVAqztbNySxL1U1MSgZ6xNDI2MTUTIkLAFBLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1d7MKL+ecAAAAGAQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAE/AQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAAAUCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 13,
+          "rule_id": "R002_HARDCODED_SECRET",
+          "cwe": "CWE-798",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "secret"
+      ]
+    },
+    {
+      "case_id": "PR-003",
+      "title": "shell=True 命令注入",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXSDMVt78AAAAPwEAAAsAAABhcHAvbWFpbi5weT1Py0oDMRTd5ysuWU1R5gMEf8GN7mWcydBAJhlukkJ3tSjiA2ej+EDBpRak7hxLrR/jPOrKXzDRsQcu3AvndSml20Np+szwGDKVWMEgVQhsEAkbGa5kSCklPMsVGtB2L0cVM60JSVgKUmEWCa5Z4Omst0HAwQmaq4d2Pvu6eW1vD5aLw/rkqT56by5fvudn7cVjNTuvPu6X032/L06r8rkuJs3dcVWOqnJSF9O6uG7Hb5+jsc/2ljyF3wTgGraUZH9BHsiMRQkdr7u0wa5R6FaeBz3i4Su7tmY34Ri4YbFROOxa/0tXL4ZoZUCFBgprsGKvg+4zITZ30LmTH1BLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1dIMxW3vwAAAA/AQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFUAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAABoCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R003_SHELL_TRUE",
+          "cwe": "CWE-78",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "command-injection"
+      ]
+    },
+    {
+      "case_id": "PR-004",
+      "title": "os.system 命令执行",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXT4J9b7yAAAAKgEAAAsAAABhcHAvbWFpbi5weTWOzUrDQBSF9/MUl1mlCHkAH8KNTxDTGx1IZsL8iNnVYin+YDaKPyi41ILUnbHU+jDOJHXlK5jR8azOhXPu+Sil2xXXe6hZCoUYmhwhExJwP8lNopngMaWUsKIUUoNQ/06ZnVKKFJUiZIgZcCGLJGcKI1/EwSaBXn21vXrolouvm9fu9mi9mriTJzd9by9fvpdn3cWjXZzbj/v1/ND71altnl09a++ObTOyzczVc1dfd+O3z9HYU/iXLIPfBWAKtgTHvyEvidpIDiEXLqVlIIp7y8poQLw8cs9/UEU6kbuoA69QsaqUxiKiqZE5UNiAECA/UEsDBBQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAdGVzdHMvdGVzdF9tYWluLnB5dY7BCoJAFEX38xWPaaNQUtDKnaFBCDlkEK2GAV8wqPMm31j091mBu+7uXs6Ba3tPQwBiIYgTdA87kEsYQ4M3M3YhkplS+lyVxVEuQQbksArUopPxPyHfaZXV9aU65bPiDfOThua/lamDLovrbLT4mmAhJgA+g+6pGTvU9nuYozgVMOVXwXif9MY6gAU4upsU9tv1RrwBUEsBAhQAFAAAAAgAAAAtXQAAAAACAAAAAAAAAA8AAAAAAAAAAAAAAIABAAAAAGFwcC9fX2luaXRfXy5weVBLAQIUABQAAAAIAAAALV0+CfW+8gAAACoBAAALAAAAAAAAAAAAAACAAS8AAABhcHAvbWFpbi5weVBLAQIUABQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAAAAAAAAAAACAAUoBAAB0ZXN0cy90ZXN0X21haW4ucHlQSwUGAAAAAAMAAwC2AAAAEAIAAAAA"
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R004_OS_SYSTEM",
+          "cwe": "CWE-78",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "command-injection"
+      ]
+    },
+    {
+      "case_id": "PR-005",
+      "title": "eval 动态执行",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXcX7KOjqAAAAJAEAAAsAAABhcHAvbWFpbi5weVNSUgquzCvJSC3JTFbIzU8pzUlVSMsvUkgtS8wpTSzJzM/TU1JS4srMLcgvKlHIL4axikuTCoryk1OLi7m4UlLTFPLyi3ITczKLUzVAGlM1rbgUgACo9dn0Bc/37Ho5c/vzWS0v9rU+7Vr5tH3vs6kb3u/peT5lxZNdfU/2z32xvhHE3tf9ZMfap/2rns3pfLKj4cmOVU/71z/tn/G8aefjhiaQK0BGZqYpgG1QyCxW8MvPS4VYBAJFqSWlRXkKUHVQXnFJEdRFekBmZoGGJhcIgJxckFgEdG5BYmVOfmIK1MFQXSDfw2W4AFBLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1dxfso6OoAAAAkAQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFCAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAAAgCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R005_EVAL_EXEC",
+          "cwe": "CWE-95",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "dynamic-exec"
+      ]
+    },
+    {
+      "case_id": "PR-006",
+      "title": "pickle 反序列化",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXbKunJnpAAAAHQEAAAsAAABhcHAvbWFpbi5weVNSUgquzCvJSC3JTFbIzU8pzUlVSMsvUkgtS8wpTSzJzM/TU1JS4srMLcgvKlEoyEzOzknl4kpJTVPIyy/KTczJLE7VAClN1bTiUgACoOJn0xc837Pr5cztz2e1vNjX+rRr5dP2vc+mbni/p+f5lBVPdvU92T/3xfpGEHtf95Mda5/2r3o2p/PJjoYnO1Y97V//tH/G86adjxuaQPaCjMxMUwDboJBZrOCXn5cKsQgEilJLSovyFKDqoLzikiKoi/SAzMwCDU0uEAA5OSc/MSW+uCSxJFUjKSc/CepkqD6I3/RAaooh0lwAUEsDBBQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAdGVzdHMvdGVzdF9tYWluLnB5dY7BCoJAFEX38xWPaaNQUtDKnaFBCDlkEK2GAV8wqPMm31j091mBu+7uXs6Ba3tPQwBiIYgTdA87kEsYQ4M3M3YhkplS+lyVxVEuQQbksArUopPxPyHfaZXV9aU65bPiDfOThua/lamDLovrbLT4mmAhJgA+g+6pGTvU9nuYozgVMOVXwXif9MY6gAU4upsU9tv1RrwBUEsBAhQAFAAAAAgAAAAtXQAAAAACAAAAAAAAAA8AAAAAAAAAAAAAAIABAAAAAGFwcC9fX2luaXRfXy5weVBLAQIUABQAAAAIAAAALV2yrpyZ6QAAAB0BAAALAAAAAAAAAAAAAACAAS8AAABhcHAvbWFpbi5weVBLAQIUABQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAAAAAAAAAAACAAUEBAAB0ZXN0cy90ZXN0X21haW4ucHlQSwUGAAAAAAMAAwC2AAAABwIAAAAA"
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R006_INSECURE_DESERIALIZE",
+          "cwe": "CWE-502",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "deserialization"
+      ]
+    },
+    {
+      "case_id": "PR-007",
+      "title": "可变默认参数",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXeTTktn0AAAAMwEAAAsAAABhcHAvbWFpbi5weU1Ou0rEQBTt5ysuUyVNwFbwF2wsxSImNzgwmQkzE8FuXRTxgWkUHyhY6oKsnXFZ149xJlkrf8FMjOCpzuHe86CUbuwJs4OGJZDLtOQImVSAuzEvY8OkiCilhOWFVAak/mO63C6UTFBrQlLMQEiVx5xpDLwRw1UCHTprc/XQzmdfN6/t7cFycehOntzRe3P58j0/ay8e7ezcftwvp/ueL05t/eyqSXN3bOuRrSeumrrquh2/fY7GfoWPZBn0DcA0rEuBv0UeCk2pBAx/g9JGDYuijrIiCImHn5xIzjExATOY67XNrWFzL6O4KFCkwUr4P6w/kR9QSwMEFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAB0ZXN0cy90ZXN0X21haW4ucHl1jsEKgkAURffzFY9po1BS0MqdoUEIOWQQrYYBXzCo8ybfWPT3WYG77u5ezoFre09DAGIhiBN0DzuQSxhDgzczdiGSmVL6XJXFUS5BBuSwCtSik/E/Id9pldX1pTrls+IN85OG5r+VqYMui+tstPiaYCEmAD6D7qkZO9T2e5ijOBUw5VfBeJ/0xjqABTi6mxT22/VGvAFQSwECFAAUAAAACAAAAC1dAAAAAAIAAAAAAAAADwAAAAAAAAAAAAAAgAEAAAAAYXBwL19faW5pdF9fLnB5UEsBAhQAFAAAAAgAAAAtXeTTktn0AAAAMwEAAAsAAAAAAAAAAAAAAIABLwAAAGFwcC9tYWluLnB5UEsBAhQAFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAAAAAAAAAAAAIABTAEAAHRlc3RzL3Rlc3RfbWFpbi5weVBLBQYAAAAAAwADALYAAAASAgAAAAA="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R007_MUTABLE_DEFAULT",
+          "cwe": "CWE-1188",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "python-semantics"
+      ]
+    },
+    {
+      "case_id": "PR-008",
+      "title": "裸 except",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXZDSoZn5AAAAUQEAAAsAAABhcHAvbWFpbi5weWWOTU7DMBCF9z6F5VW66QE4BBtO4DoTsHDsyD+I7koFQvyIbED8CCSWUAmVHaEq5TDYSVlxBWJIV32rN6P3Zj5CyNZQ2h2wnOFcpU4AzpTGsEeFo5Yr2SeEIJ4XSluszMoZNyi0YmAMQilkWCqdU8ENJLEIvQ2EW7XV+vqxmc++b9+au8Pl4iicPofjj/rq9Wd+3lw++dmF/3xYTg+iX5z56iWUk/r+xFcjX01COQ3lTTN+/xqNI0U8yTP89wFzgzeVhP9HURqs0xJ3uW4yVndE/dbyIumhqIi87ahOIU0YFWJA2W7HbPVw7eYq0rbjFvYZFHYtFXHQL1BLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1dkNKhmfkAAABRAQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFRAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAABcCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 17,
+          "rule_id": "R008_BARE_EXCEPT",
+          "cwe": "CWE-396",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "error-handling"
+      ]
+    },
+    {
+      "case_id": "PR-009",
+      "title": "路径穿越",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXfUJEtQUAQAAagEAAAsAAABhcHAvbWFpbi5weWWPy0rEMBSG932KQ1YtQrv3Idz4ABKbUxpok5KkDu5mhhHxgt0oXlBwqQMy7qzDOD6MvYwrX8HG6az8OZD/JDn5vxBCdg+FidHwEFLJ8gQhkgrwgCY5NVwKnxDi8DSTyoDUG6fz/UzJELV2HIYRCKlSmnCNrh1Eb9uBTt1oc/3YLubft2/t3WS1PKpPn+vjj+bq9Wdx3l4+VfOL6vNhNRtZvzyrype6mDb3J1U5rMppXczq4qYdv38Nx5bCPskj+EsArmFHClwHWSk0uRLQ3+s7bVRP5HeWZ67nWFlkhZTtKbTfcQVNN8wDbmKQGQqXMGpoQGAL7HG3kMD3baEJg4xqPWDEA6ohpoIl/0nW277N6WJ/AVBLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1d9QkS1BQBAABqAQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFsAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAADICAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R009_PATH_TRAVERSAL",
+          "cwe": "CWE-22",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "traversal"
+      ]
+    },
+    {
+      "case_id": "PR-010",
+      "title": "弱哈希",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXV3euGv2AAAANAEAAAsAAABhcHAvbWFpbi5weTWPvU7DMBSFdz+F5SlesrH0IVh4AlPfEEuOHTkOolupqBA/IguIH4HECJVQ2QhVWx6GOCkTr0AM5kznSt+951xCyM5I2RSsGOJM81ICTrTBsM9kyazQKiaEIJHl2licsiKVYhchDglW2mRMigIizwIdINyrp9vrx265+Lp96+6ONuupO312x6v26vV7ed5dPjWLi+bjYTM/9H591tQvrpq19ydNPW7qmavmrrrpJu+f44kP9idFgn8TsCjwtlbwF+RlwJZG4cCFqbAmNIp7K/KIIi9fmYs9KGyUs5HUjIfGYS38Fmd86x+IQQ01h4jSOIWDsEzRD1BLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1dXd64a/YAAAA0AQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFOAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAABQCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R010_WEAK_HASH",
+          "cwe": "CWE-327",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "crypto"
+      ]
+    },
+    {
+      "case_id": "PR-011",
+      "title": "资源未关闭",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXQNc6a75AAAAPAEAAAsAAABhcHAvbWFpbi5weU1Qy0rDQBTd5ysus0o3+QDBX3DjB8jY3JCByUyYmQju2qIUH5iN4gMFl1qQujOWWj/GTFJX/kJnTATP6lzuPQ8uIWT3UJgUDRtCJuOCIyRSAR5QXlDDpIgIIQHLcqkMSP3HdLGfKzlErYMgxgSEVBnlTGPohTjYCsDBSZvrx3a5+L59a++O1qtje/pspx/N1evP8ry9fKoXF/Xnw3o+9nx1Vlcvtpw19yd1NaqrmS3ntrxpJ+9fo4lv4S1ZAr8JwDTsSIFdkIdCUygB/V0/aaP6RpGjLA8HgYevrJDGe5TzMKcm7QunVMTuA9sgcxTd4r9bt4680hltAFBLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1dA1zprvkAAAA8AQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFRAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAABcCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R011_UNCLOSED_RESOURCE",
+          "cwe": "CWE-772",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "resource"
+      ]
+    },
+    {
+      "case_id": "PR-012",
+      "title": "使用 assert 校验",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXfgpxhgAAQAATwEAAAsAAABhcHAvbWFpbi5weU1PS0oDQRTc9ykevZqA5gCiV3DjCTozb0jDTPfQH4O7GCLiB2ej+EHBpQYk7hxDjIdxPnHlFTJtWrBW9Yp6r+pRSvcOhOmj4SGkMrIJQiwV4D5LLDNcii6llPA0k8qA1H9M216mZIhaExJhDEKqlCVcY+AWsbNFoEW7Wl8/NvPZ9+1bczdeLo6q0+fq+KO+ev2ZnzeXT+Xsovx8WE4PHV+clcVLlU/q+5OyGJbFpMqnVX7TjN6/hiPXwp3kMfwmANewKwWugxwUGqsEeJ+ftFG+UbelPAs6xMFVHnDTjxQbBD2WMBHiBrBUWmF8d6Y1to+uNdjeAW/7f91LsOltZAVQSwMEFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAB0ZXN0cy90ZXN0X21haW4ucHl1jsEKgkAURffzFY9po1BS0MqdoUEIOWQQrYYBXzCo8ybfWPT3WYG77u5ezoFre09DAGIhiBN0DzuQSxhDgzczdiGSmVL6XJXFUS5BBuSwCtSik/E/Id9pldX1pTrls+IN85OG5r+VqYMui+tstPiaYCEmAD6D7qkZO9T2e5ijOBUw5VfBeJ/0xjqABTi6mxT22/VGvAFQSwECFAAUAAAACAAAAC1dAAAAAAIAAAAAAAAADwAAAAAAAAAAAAAAgAEAAAAAYXBwL19faW5pdF9fLnB5UEsBAhQAFAAAAAgAAAAtXfgpxhgAAQAATwEAAAsAAAAAAAAAAAAAAIABLwAAAGFwcC9tYWluLnB5UEsBAhQAFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAAAAAAAAAAAAIABWAEAAHRlc3RzL3Rlc3RfbWFpbi5weVBLBQYAAAAAAwADALYAAAAeAgAAAAA="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R012_ASSERT_VALIDATION",
+          "cwe": "CWE-617",
+          "severity": "info"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "validation"
+      ]
+    },
+    {
+      "case_id": "PR-013",
+      "title": "关闭 TLS 校验",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXadgIxryAAAAJgEAAAsAAABhcHAvbWFpbi5weTVPy0oDQRC8z1c0c9oF2Q8QvHr04hcsSY8Z2J2J8wjkFkOC+MC9KD5Q8KgBiTfXkMSPcWY3nvwFd3StUzVV3VVNKd0fCtNDwzuQy67NEJhUgIM0s6nhUiSUUsLzvlQGFB5a1EYT0kUGQqo8zbjGKJgx3ibQoLFX14/1cvF1+1bfTTbrqT999ser6ur1e3leXz65xYX7eNjMjwJfn7nyxRez6v7ElSNXznwx98VNPX7/HI1DcjjJGfwmANewJwX+BQUoNFYJaH3tpI1qGyUN5f0oJgGhMkPT6UVWZW3ZduP/r+QATVC3YICKs+HObpppjMkPUEsDBBQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAdGVzdHMvdGVzdF9tYWluLnB5dY7BCoJAFEX38xWPaaNQUtDKnaFBCDlkEK2GAV8wqPMm31j091mBu+7uXs6Ba3tPQwBiIYgTdA87kEsYQ4M3M3YhkplS+lyVxVEuQQbksArUopPxPyHfaZXV9aU65bPiDfOThua/lamDLovrbLT4mmAhJgA+g+6pGTvU9nuYozgVMOVXwXif9MY6gAU4upsU9tv1RrwBUEsBAhQAFAAAAAgAAAAtXQAAAAACAAAAAAAAAA8AAAAAAAAAAAAAAIABAAAAAGFwcC9fX2luaXRfXy5weVBLAQIUABQAAAAIAAAALV2nYCMa8gAAACYBAAALAAAAAAAAAAAAAACAAS8AAABhcHAvbWFpbi5weVBLAQIUABQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAAAAAAAAAAACAAUoBAAB0ZXN0cy90ZXN0X21haW4ucHlQSwUGAAAAAAMAAwC2AAAAEAIAAAAA"
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R014_TLS_VERIFY_DISABLED",
+          "cwe": "CWE-295",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "tls"
+      ]
+    },
+    {
+      "case_id": "PR-014",
+      "title": "安全场景使用非加密随机",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXdwue0zyAAAANAEAAAsAAABhcHAvbWFpbi5weVNSUgquzCvJSC3JTFbIzU8pzUlVSMsvUkgtS8wpTSzJzM/TU1JS4srMLcgvKlEoSsxLyc/l4kpJTVPIyy/KTczJLE7VAClN1bTiUgACoOJn0xc837Pr5cztz2e1vNjX+rRr5dP2vc+mbni/p+f5lBVPdvU92T/3xfpGEHtf95Mda5/2r3o2p/PJjoYnO1Y97V//tH/G86adjxuaQPaCjMxMUwDboJBZrOCXn5cKsQgEilJLSovyFKDqoLzikiKoi/SAzMwCDU0uEAA7ObU8vji1uBjoq/iS/OzUPA2oq8EcBVuwXogf9SCUhqYmstlgdVwAUEsDBBQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAdGVzdHMvdGVzdF9tYWluLnB5dY7BCoJAFEX38xWPaaNQUtDKnaFBCDlkEK2GAV8wqPMm31j091mBu+7uXs6Ba3tPQwBiIYgTdA87kEsYQ4M3M3YhkplS+lyVxVEuQQbksArUopPxPyHfaZXV9aU65bPiDfOThua/lamDLovrbLT4mmAhJgA+g+6pGTvU9nuYozgVMOVXwXif9MY6gAU4upsU9tv1RrwBUEsBAhQAFAAAAAgAAAAtXQAAAAACAAAAAAAAAA8AAAAAAAAAAAAAAIABAAAAAGFwcC9fX2luaXRfXy5weVBLAQIUABQAAAAIAAAALV3cLntM8gAAADQBAAALAAAAAAAAAAAAAACAAS8AAABhcHAvbWFpbi5weVBLAQIUABQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAAAAAAAAAAACAAUoBAAB0ZXN0cy90ZXN0X21haW4ucHlQSwUGAAAAAAMAAwC2AAAAEAIAAAAA"
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R015_INSECURE_RANDOM",
+          "cwe": "CWE-338",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "random"
+      ]
+    },
+    {
+      "case_id": "PR-015",
+      "title": "多缺陷：调试模式 + CORS 通配",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXXd7C4r1AAAAHAEAAAsAAABhcHAvbWFpbi5weVNSUgquzCvJSC3JTFbIzU8pzUlVSMsvUkgtS8wpTSzJzM/TU1JS4srMLcgvKlHIL4axikuTCoryk1OLi7m4UlLTFPLyi3ITczKLUzVAGlM1rbgUgACo9dn0Bc/37Ho5c/vzWS0v9rU+7Vr5tH3vs6kb3u/peT5lxZNdfU/2z32xvhHE3tf9ZMfap/2rns3pfLKj4cmOVU/71z/tn/G8aefjhiaQK0BGZqYpgG1QyCxW8MvPS4VYBAJFqSWlRXkKUHVQXnFJEdRFekBmZoGGJhcIuLg6hbor2CqEFJWmArmJOTn55fH5RZnpmXnFQOFoJS2lWC4AUEsDBBQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAdGVzdHMvdGVzdF9tYWluLnB5dY7BCoJAFEX38xWPaaNQUtDKnaFBCDlkEK2GAV8wqPMm31j091mBu+7uXs6Ba3tPQwBiIYgTdA87kEsYQ4M3M3YhkplS+lyVxVEuQQbksArUopPxPyHfaZXV9aU65bPiDfOThua/lamDLovrbLT4mmAhJgA+g+6pGTvU9nuYozgVMOVXwXif9MY6gAU4upsU9tv1RrwBUEsBAhQAFAAAAAgAAAAtXQAAAAACAAAAAAAAAA8AAAAAAAAAAAAAAIABAAAAAGFwcC9fX2luaXRfXy5weVBLAQIUABQAAAAIAAAALV13ewuK9QAAABwBAAALAAAAAAAAAAAAAACAAS8AAABhcHAvbWFpbi5weVBLAQIUABQAAAAIAAAALV01+lx7lgAAAN4AAAASAAAAAAAAAAAAAACAAU0BAAB0ZXN0cy90ZXN0X21haW4ucHlQSwUGAAAAAAMAAwC2AAAAEwIAAAAA"
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R016_DEBUG_MODE_ENABLED",
+          "cwe": "CWE-489",
+          "severity": "warning"
+        },
+        {
+          "file": "app/main.py",
+          "line": 17,
+          "rule_id": "R017_CORS_WILDCARD",
+          "cwe": "CWE-942",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "config"
+      ]
+    },
+    {
+      "case_id": "PR-016",
+      "title": "多缺陷：子进程返回码未检查 + 权限过宽",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXQeUtsISAQAAZQEAAAsAAABhcHAvbWFpbi5weUVQy0rDQBTd5ysus0qgBHcBP8KNS3ExTSZkIJkZ5iF0V4siPjAbxQcKLrUgdWcttX6MedSVv2CmneJZnXs5595zL0Jod8B0RjSNoeCJyQmkXAI5wLnBmnIWIoQ8WgguNXC1Ycr0heQxUcrzEpIC47LAOVXEt0YSbHvQobM2N0/tfPZz997eHy0Xx/XZS33y2Vy//c4v2qvnanZZfT0uJ4eWL86r6WtdjpuH02o6rKbjupzU5W07+vgejmwKO5KmsNoAVMEOZ2S9yEISbSQDp3OV0tIlCjtKhR94FjZyQkTOBz6WmqY41i7y/2GhNMzfQ2sZ6sFGuB+4AcL0u4szX2CdOTdXYZx1b1z1erDFoygKvD9QSwMEFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAB0ZXN0cy90ZXN0X21haW4ucHl1jsEKgkAURffzFY9po1BS0MqdoUEIOWQQrYYBXzCo8ybfWPT3WYG77u5ezoFre09DAGIhiBN0DzuQSxhDgzczdiGSmVL6XJXFUS5BBuSwCtSik/E/Id9pldX1pTrls+IN85OG5r+VqYMui+tstPiaYCEmAD6D7qkZO9T2e5ijOBUw5VfBeJ/0xjqABTi6mxT22/VGvAFQSwECFAAUAAAACAAAAC1dAAAAAAIAAAAAAAAADwAAAAAAAAAAAAAAgAEAAAAAYXBwL19faW5pdF9fLnB5UEsBAhQAFAAAAAgAAAAtXQeUtsISAQAAZQEAAAsAAAAAAAAAAAAAAIABLwAAAGFwcC9tYWluLnB5UEsBAhQAFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAAAAAAAAAAAAIABagEAAHRlc3RzL3Rlc3RfbWFpbi5weVBLBQYAAAAAAwADALYAAAAwAgAAAAA="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R018_SUBPROCESS_MISSING_CHECK",
+          "cwe": "CWE-754",
+          "severity": "info"
+        },
+        {
+          "file": "app/main.py",
+          "line": 19,
+          "rule_id": "R021_WORLD_WRITABLE_PERMISSION",
+          "cwe": "CWE-732",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "subprocess",
+        "permissions"
+      ]
+    },
+    {
+      "case_id": "PR-017",
+      "title": "多缺陷：不安全临时文件 + XML 外部实体",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXZW0FzgYAQAAeAEAAAsAAABhcHAvbWFpbi5weVVQu07DMBTd/RWWp3TJB7BnZSF7ZSU3xCK2I9vhsZUKhHiILCAeAokRKqGykValfAx5lIlfIA7pwJnOle95+BJCtg6EicGwAHMZZgngSCoMuzTJqGFSuIQQxHgqlcEGeBqxBNbzPk9cMArA9RLgIIzfckw19nyEQoiwkIrThGlwrB8MNhBu0TrWN0/NYv59997cH62Wx9XZS3XyUV+//Swumqvncn5Zfj6upoeWL8/L4rXKJ/XDaVmMymJS5dMqv23Gs6/R2JazlizCXQJmGm9KAX9BFgpMpgTu9/pJG9U3clvKUmeALGxlHShqgniYUhM7feFetf6+y3cs7URWklKlYRjKILM3cBTd+6/zfDdSktsksd09o19QSwMEFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAB0ZXN0cy90ZXN0X21haW4ucHl1jsEKgkAURffzFY9po1BS0MqdoUEIOWQQrYYBXzCo8ybfWPT3WYG77u5ezoFre09DAGIhiBN0DzuQSxhDgzczdiGSmVL6XJXFUS5BBuSwCtSik/E/Id9pldX1pTrls+IN85OG5r+VqYMui+tstPiaYCEmAD6D7qkZO9T2e5ijOBUw5VfBeJ/0xjqABTi6mxT22/VGvAFQSwECFAAUAAAACAAAAC1dAAAAAAIAAAAAAAAADwAAAAAAAAAAAAAAgAEAAAAAYXBwL19faW5pdF9fLnB5UEsBAhQAFAAAAAgAAAAtXZW0FzgYAQAAeAEAAAsAAAAAAAAAAAAAAIABLwAAAGFwcC9tYWluLnB5UEsBAhQAFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAAAAAAAAAAAAIABcAEAAHRlc3RzL3Rlc3RfbWFpbi5weVBLBQYAAAAAAwADALYAAAA2AgAAAAA="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 15,
+          "rule_id": "R013_INSECURE_TEMP_FILE",
+          "cwe": "CWE-377",
+          "severity": "warning"
+        },
+        {
+          "file": "app/main.py",
+          "line": 19,
+          "rule_id": "R023_XML_UNSAFE_PARSE",
+          "cwe": "CWE-611",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "tempfile",
+        "xml"
+      ]
+    },
+    {
+      "case_id": "PR-018",
+      "title": "多缺陷：不安全 YAML + 过宽异常捕获",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXfqcCxARAQAAgAEAAAsAAABhcHAvbWFpbi5weWVQu07EMBDs/RUrV7kmH0BPS8MHIJNswMKxI8cB0h0nEOIh0oB4CCRKOAkdHeF0HB9DHkfFLxAHU900u17PeGZNKV3PpdlGwwOIVZgJhEhpwF0mMma4kj6llPA4UdpAzmJBSIgRSKVjJniKniXiYIVAh47aXD+2s+n37Vt7d7iYH9Wnz/XxR3P1+jM7by+fqulF9fmwmBzYfn5WlS91MW7uT6pyWJXjupjUxU07ev8ajqyrfZJH0DsAT2FNSfwzstBoMi3B8dwpNdol8ruWJ96AWNjICdMpbgRKRnzL02zPZXZCu5ovFAv7KyfRmHLBURovYEJssmDHiYzOl4L8UzpLO8X9ABMDq33p/nGJb7chv1BLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1d+pwLEBEBAACAAQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAFpAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAAC8CAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R022_YAML_UNSAFE_LOAD",
+          "cwe": "CWE-502",
+          "severity": "critical"
+        },
+        {
+          "file": "app/main.py",
+          "line": 20,
+          "rule_id": "R019_BROAD_EXCEPT",
+          "cwe": "CWE-396",
+          "severity": "warning"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "deserialization",
+        "error-handling"
+      ]
+    },
+    {
+      "case_id": "PR-019",
+      "title": "多缺陷：硬编码口令 + SQL 拼接（修复链路用例）",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXZL9AkosAQAAagEAAAsAAABhcHAvbWFpbi5weTVPTU/CQBC976+Y7IWiwsGjCQeVGg8qhppwNE0ZwsZ2l2x3jd6QaIwfkQvGj2jiUUkM3kSC+GNsKZ78C7ZQ32VmMu/Nm0cptQ65qqNiDniiql2EmpCA+7arbcUEz1NKCfMaQioQPiFVrAEX0rNd5qOR0DC7RCBGTBzfPEXDwc/de3R/PBmdhOcv4enn+Prtd3gZdZ6DwVXw9TjpHSX96CLov4bt7vjhLOg3g343bPfC9m3U+vhuthLP5CSrwdQBmA9bguPMKIFEpSWHlJdOvpLpR/m4ZQ0jSxIUV3a3ly2rUioXoQC0rrlCuZjz0Yl1uamAklkyV4g93TAcLX0hF4Db3n+61GK2yeMBOlqhQS1zw1zdgTlYK5c2QUFl3SybwAsZCvNTeVxohmbJH1BLAwQUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAHRlc3RzL3Rlc3RfbWFpbi5weXWOwQqCQBRF9/MVj2mjUFLQyp2hQQg5ZBCthgFfMKjzJt9Y9PdZgbvu7l7OgWt7T0MAYiGIE3QPO5BLGEODNzN2IZKZUvpclcVRLkEG5LAK1KKT8T8h32mV1fWlOuWz4g3zk4bmv5Wpgy6L62y0+JpgISYAPoPuqRk71PZ7mKM4FTDlV8F4n/TGOoAFOLqbFPbb9Ua8AVBLAQIUABQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAAAAAAAAAAACAAQAAAABhcHAvX19pbml0X18ucHlQSwECFAAUAAAACAAAAC1dkv0CSiwBAABqAQAACwAAAAAAAAAAAAAAgAEvAAAAYXBwL21haW4ucHlQSwECFAAUAAAACAAAAC1dNfpce5YAAADeAAAAEgAAAAAAAAAAAAAAgAGEAQAAdGVzdHMvdGVzdF9tYWluLnB5UEsFBgAAAAADAAMAtgAAAEoCAAAAAA=="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 13,
+          "rule_id": "R002_HARDCODED_SECRET",
+          "cwe": "CWE-798",
+          "severity": "critical"
+        },
+        {
+          "file": "app/main.py",
+          "line": 17,
+          "rule_id": "R001_SQL_CONCAT",
+          "cwe": "CWE-89",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "secret",
+        "sql",
+        "fixable"
+      ]
+    },
+    {
+      "case_id": "PR-020",
+      "title": "多缺陷：明文 HTTP + 连接串内联凭据",
+      "input": {
+        "diff": "",
+        "base_commit": "synthetic-base-001",
+        "input_type": "zip",
+        "zip_base64": "UEsDBBQAAAAIAAAALV0AAAAAAgAAAAAAAAAPAAAAYXBwL19faW5pdF9fLnB5AwBQSwMEFAAAAAgAAAAtXcGYwtQqAQAAZgEAAAsAAABhcHAvbWFpbi5weT2OvUoDQRSF+32KYaqk2aDRZkFQ0U5SGKxlsntjBnZnxrmzQbsYFPEH0yj+oGCpAYmdMcT4MO5mY+UruKPRU50L5zv3UEqru8I0wHCfRDKIQyB1qQk0WRgzw6VwKaUOj5TUhkj8cxjXlJY+IDpOAHUipI5YyBEKFoSi55BcOTq+vM+Gg8/rl+xmfzI6SI8f08O38cXz1/A0O39IBmfJ+92kt2f96CTpP6Wd7vj2KOm3kn437fTSzlXWfv1ote0KW8nr5OcD4UgqUsDvIysNJtaCTHPTC42eLnJzy1Wh6FgtL1VXNzfW18gCoQ1jlFcqMcVdLgxowUIXdlikQnAFmFJzhubESrViw0qi2dKA22GOYNOPEbSHZV+XjWKIi0Htv8SbnyvP5rWKOt9QSwMEFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAB0ZXN0cy90ZXN0X21haW4ucHl1jsEKgkAURffzFY9po1BS0MqdoUEIOWQQrYYBXzCo8ybfWPT3WYG77u5ezoFre09DAGIhiBN0DzuQSxhDgzczdiGSmVL6XJXFUS5BBuSwCtSik/E/Id9pldX1pTrls+IN85OG5r+VqYMui+tstPiaYCEmAD6D7qkZO9T2e5ijOBUw5VfBeJ/0xjqABTi6mxT22/VGvAFQSwECFAAUAAAACAAAAC1dAAAAAAIAAAAAAAAADwAAAAAAAAAAAAAAgAEAAAAAYXBwL19faW5pdF9fLnB5UEsBAhQAFAAAAAgAAAAtXcGYwtQqAQAAZgEAAAsAAAAAAAAAAAAAAIABLwAAAGFwcC9tYWluLnB5UEsBAhQAFAAAAAgAAAAtXTX6XHuWAAAA3gAAABIAAAAAAAAAAAAAAIABggEAAHRlc3RzL3Rlc3RfbWFpbi5weVBLBQYAAAAAAwADALYAAABIAgAAAAA="
+      },
+      "expected_findings": [
+        {
+          "file": "app/main.py",
+          "line": 14,
+          "rule_id": "R020_INSECURE_URL_SCHEME",
+          "cwe": "CWE-319",
+          "severity": "warning"
+        },
+        {
+          "file": "app/main.py",
+          "line": 17,
+          "rule_id": "R024_CREDENTIAL_IN_URL",
+          "cwe": "CWE-798",
+          "severity": "critical"
+        }
+      ],
+      "expected_tools": [
+        "read_file",
+        "search_code"
+      ],
+      "mode_expectations": {
+        "modes": [
+          "single",
+          "a2a",
+          "offline"
+        ],
+        "expected_agents": [
+          "review-agent",
+          "impact-agent"
+        ],
+        "expected_artifacts": [
+          "Finding",
+          "ImpactReport"
+        ],
+        "max_child_tasks": 2,
+        "recovery_required": false
+      },
+      "safety_constraints": {
+        "no_network": true,
+        "no_host_write": true,
+        "approval_required": true
+      },
+      "tags": [
+        "transport",
+        "secret"
+      ]
+    }
+  ]
+}

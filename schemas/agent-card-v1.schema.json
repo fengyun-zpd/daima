@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/agent-card-v1.schema.json",
+  "title": "CodePilot Agent Card v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agent_id", "card_version", "protocol_versions", "capabilities", "input_schema", "output_schemas", "endpoint", "auth", "limits", "status"],
+  "properties": {
+    "agent_id": {"type": "string", "pattern": "^[a-z][a-z0-9-]{2,63}$"},
+    "card_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"},
+    "protocol_versions": {"type": "array", "items": {"const": "0.1"}, "minItems": 1, "uniqueItems": true},
+    "capabilities": {"type": "array", "items": {"type": "string", "pattern": "^[a-z]+\\.[a-z0-9_.-]+$"}, "minItems": 1, "uniqueItems": true},
+    "input_schema": {"type": "string"},
+    "output_schemas": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+    "endpoint": {"type": "string", "pattern": "^/internal/a2a/agents/"},
+    "auth": {"type": "object", "additionalProperties": false, "required": ["audience", "scopes"], "properties": {"audience": {"type": "string"}, "scopes": {"type": "array", "items": {"type": "string"}, "minItems": 1}}},
+    "limits": {"type": "object", "additionalProperties": false, "required": ["max_steps", "timeout_seconds"], "properties": {"max_steps": {"type": "integer", "minimum": 1, "maximum": 100}, "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 300}}},
+    "status": {"enum": ["healthy", "degraded", "draining", "offline"]}
+  }
+}

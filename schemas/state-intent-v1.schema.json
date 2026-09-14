@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/state-intent-v1.schema.json",
+  "title": "CodePilot StateIntent v1",
+  "description": "Agent 只能提交状态变更意图，由编排器校验 owner、版本、合法迁移和幂等键（SRS §5.4、docs/02 §4）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["expected_version", "owner", "changes", "reason", "idempotency_key"],
+  "properties": {
+    "expected_version": {"type": "integer", "minimum": 1},
+    "owner": {"type": "string", "minLength": 1},
+    "changes": {"type": "object"},
+    "reason": {"type": "string", "minLength": 1},
+    "idempotency_key": {"type": "string", "minLength": 8}
+  }
+}

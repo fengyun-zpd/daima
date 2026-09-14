@@ -1,0 +1,140 @@
+# CodePilot A2A —— 一键启动（PostgreSQL + API + 可选拆分 Agent 服务 + Dashboard）
+#
+# 常用命令：
+#   docker compose up -d postgres api web       # 单进程形态（API 内含 /internal/a2a）+ 工作台
+#   docker compose --profile split up -d        # 拆分形态：coordinator 与 agent 分开部署
+#   docker compose run --rm migrate            # 执行数据库迁移
+#   docker compose run --rm sandbox-image      # 构建沙箱镜像
+#   docker compose --profile eval run --rm evals   # 运行黄金集评测
+#
+# 说明：提交代码只在 ``codepilot-sandbox`` 镜像的容器中执行（network=none、非 root、
+# 只读根文件系统），本文件中的服务容器不执行不可信代码。
+
+name: codepilot
+
+x-app-env: &app-env
+  CODEPILOT_DATABASE_URL: postgresql+psycopg://codepilot:codepilot@postgres:5432/codepilot
+  CODEPILOT_DATA_ROOT: /data
+  CODEPILOT_CONFIG: /app/examples/.codepilot.yaml
+  CODEPILOT_RECOVER_ON_START: "1"
+  CODEPILOT_FAULT_INJECTION: "0"
+  CODEPILOT_SANDBOX_IMAGE: codepilot-sandbox:local
+
+x-app-volumes: &app-volumes
+  - codepilot-data:/data
+  # Fix/Verify 需要调用 Docker Engine 启动沙箱容器（宪法第八条：提交代码只在沙箱中运行）。
+  # 该挂载让服务容器能够创建沙箱容器；不接受它的部署形态下，Verify 会返回
+  # SANDBOX_UNAVAILABLE 并安全降级，绝不改为在宿主机执行提交代码。
+  - /var/run/docker.sock:/var/run/docker.sock
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: codepilot
+      POSTGRES_PASSWORD: codepilot
+      POSTGRES_DB: codepilot
+    ports:
+      - "55432:5432"
+    volumes:
+      - codepilot-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codepilot -d codepilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    environment:
+      <<: *app-env
+      CODEPILOT_RECOVER_ON_START: "1"
+      # A2A 传输选择：为空 → 进程内 InProcessInvoker（默认，单进程形态）；
+      # 设为 http://agent:8100 → Coordinator 通过 HTTP/SSE 调用拆分出来的 Agent 服务。
+      # 值来自宿主机环境或同目录 .env，Compose 不会自动转发未声明的宿主机变量。
+      CODEPILOT_A2A_BASE_URL: ${CODEPILOT_A2A_BASE_URL:-}
+      CODEPILOT_A2A_ROUTES: ${CODEPILOT_A2A_ROUTES:-}
+    volumes: *app-volumes
+    ports:
+      - "8099:8099"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python -m alembic upgrade head &&
+             python -m uvicorn apps.api.main:app --host 0.0.0.0 --port 8099"
+
+  # 注意：MVP 的拆分形态是"一个统一的 Agent 服务进程"托管四类 Agent Card，
+  # 不是四个独立容器（见 README §1.1 与 docs/01 §5）。四类 Agent 的边界由
+  # Agent Card / capability allowlist / 独立 handler 保证，而不是由容器数量保证。
+  agent:
+    profiles: ["split"]
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    environment:
+      <<: *app-env
+      CODEPILOT_RECOVER_ON_START: "0"
+      CODEPILOT_FAULT_INJECTION: ${CODEPILOT_FAULT_INJECTION:-0}
+    volumes: *app-volumes
+    ports:
+      - "8100:8100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "python -m uvicorn apps.api.agent_main:app --host 0.0.0.0 --port 8100"
+
+  # Dashboard：nginx 托管前端静态产物，并把 /api、/internal、/healthz、/readyz
+  # 反向代理到 api 服务（见 docker/web/nginx.conf）。前端只用相对路径调用后端，
+  # 因此单进程形态与拆分形态都不需要改前端源码。
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_started
+
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    environment: *app-env
+    volumes: *app-volumes
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "alembic", "upgrade", "head"]
+
+  sandbox-image:
+    profiles: ["tools"]
+    image: docker:27-cli
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    working_dir: /workspace
+    command: ["python", "scripts/build_sandbox_image.py"]
+
+  evals:
+    profiles: ["eval"]
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    environment:
+      <<: *app-env
+      CODEPILOT_AUTO_FIX: "0"
+    volumes: *app-volumes
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "scripts/run_evals.py", "--case-limit", "5", "--runs", "1"]
+
+volumes:
+  codepilot-pg:
+  codepilot-data:

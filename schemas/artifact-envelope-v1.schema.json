@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codepilot.local/schemas/artifact-envelope-v1.schema.json",
+  "title": "CodePilot Artifact Envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_id", "task_id", "artifact_type", "schema_version", "content_hash", "size_bytes", "data"],
+  "properties": {
+    "artifact_id": {"type": "string", "minLength": 8},
+    "task_id": {"type": "string", "minLength": 8},
+    "artifact_type": {"enum": ["Finding", "ImpactReport", "ReviewComment", "PatchCandidate", "PatchEvidence", "VerifyEvidence"]},
+    "schema_version": {"const": "1.0"},
+    "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "size_bytes": {"type": "integer", "minimum": 0, "maximum": 10485760},
+    "data": {"type": "object"}
+  }
+}

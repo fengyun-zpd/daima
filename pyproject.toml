@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codepilot"
+version = "0.1.0"
+description = "CodePilot A2A — 受控的多 Agent Python 代码审查闭环（项目三 MVP）"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.4",
+    "SQLAlchemy>=2.0",
+    "alembic>=1.13",
+    "jsonschema>=4.22",
+    "PyYAML>=6.0",
+    "httpx>=0.27",
+    "psycopg[binary]>=3.1",
+    "docker>=7.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "ruff>=0.6"]
+
+[tool.setuptools.packages.find]
+include = [
+    "apps*",
+    "domain*",
+    "agents*",
+    "a2a*",
+    "tools*",
+    "rules*",
+    "sandbox*",
+    "repositories*",
+    "evals*",
+]
+namespaces = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = ["migrations/versions", ".venv", "var"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C4", "SIM"]
+ignore = ["E501"]

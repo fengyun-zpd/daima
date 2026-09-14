@@ -3,6 +3,7 @@
 import React from "react";
 import { ApiError, CodePilotClient, OperationKeys, type Identity } from "./api";
 import { AuditPanel } from "./components/AuditPanel";
+import { AuthPage } from "./components/AuthPage";
 import { ErrorBanner } from "./components/Common";
 import { CreateForm, type CreateFormValues } from "./components/CreateForm";
 import { HistoryPanel } from "./components/HistoryPanel";
@@ -35,21 +36,20 @@ const TERMINAL = new Set([
   "REVIEWED",
 ]);
 
-function readStoredIdentity(): Identity {
+function readStoredIdentity(): Identity | null {
   const raw = window.localStorage.getItem("codepilot.identity");
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as Identity;
-      if (parsed.actorId && parsed.role) return parsed;
+      if (parsed.actorId && parsed.role && parsed.token) return parsed;
     } catch {
       /* 忽略损坏的本地存储 */
     }
   }
-  return { actorId: "dev-1", displayName: "", role: "developer" };
+  return null;
 }
 
-export default function App(): React.ReactElement {
-  const [identity, setIdentity] = React.useState<Identity>(readStoredIdentity);
+function Workbench({ identity, onLogout }: { identity: Identity; onLogout: () => void }): React.ReactElement {
   const [taskId, setTaskId] = React.useState<string>("");
   const [manualTaskId, setManualTaskId] = React.useState<string>("");
   const [detail, setDetail] = React.useState<ReviewDetail | null>(null);
@@ -67,10 +67,6 @@ export default function App(): React.ReactElement {
   const client = React.useMemo(() => new CodePilotClient(identity), [identity]);
   // 用户操作级幂等键：同一次操作失败后重试复用同一个键，成功后清空。
   const keys = React.useMemo(() => new OperationKeys(), []);
-
-  React.useEffect(() => {
-    window.localStorage.setItem("codepilot.identity", JSON.stringify(identity));
-  }, [identity]);
 
   // 切换身份意味着换命令主体（幂等键按 actor 隔离），因此清理未完成的键。
   React.useEffect(() => {
@@ -180,6 +176,7 @@ export default function App(): React.ReactElement {
           base_commit: values.baseCommit,
           context_policy: values.contextPolicy,
           mode: values.mode,
+          custom_task_id: values.customTaskId || undefined,
         },
         { idempotencyKey: keys.keyFor(action) },
       );
@@ -209,11 +206,13 @@ export default function App(): React.ReactElement {
       setError({ code: "TASK_ID_REQUIRED", message: "请先填写要打开的任务编号。" });
       return;
     }
-    setTaskId(nextId);
+    const matched = history.find((task) => task.id === nextId || task.custom_task_id === nextId);
+    const resolvedId = matched?.id ?? nextId;
+    setTaskId(resolvedId);
     setManualTaskId(nextId);
     setError(null);
-    await refresh(nextId);
-    await loadAudit(nextId);
+    await refresh(resolvedId);
+    await loadAudit(resolvedId);
   };
 
   const leaveTask = () => {
@@ -303,25 +302,13 @@ export default function App(): React.ReactElement {
           ? `系统状态：可用 · ${ready.agents.length} 个 Agent 已就绪`
           : "系统连接中",
       ),
+      React.createElement("button", { className: "nav-button", type: "button", onClick: () => document.getElementById("create-review")?.scrollIntoView({ behavior: "smooth" }) }, "创建审查"),
+      React.createElement("button", { className: "nav-button", type: "button", onClick: () => document.getElementById("review-history")?.scrollIntoView({ behavior: "smooth" }) }, "审查历史"),
       React.createElement("div", { className: "spacer" }),
       React.createElement(
         "div",
         { className: "identity" },
-        React.createElement("span", null, "当前操作人"),
-        React.createElement("input", {
-          style: { width: 100 },
-          value: identity.displayName ?? "",
-          placeholder: "姓名",
-          onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-            setIdentity({ ...identity, displayName: e.target.value }),
-        }),
-        React.createElement("input", {
-          style: { width: 110 },
-          value: identity.actorId,
-          placeholder: "工号 / 账号",
-          onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
-            setIdentity({ ...identity, actorId: e.target.value }),
-        }),
+        React.createElement("span", null, `${identity.displayName ?? "用户"} · 工号 ${identity.actorId}`),
         React.createElement(
           "label",
           { style: { display: "flex", gap: 6, alignItems: "center", margin: 0 } },
@@ -334,23 +321,8 @@ export default function App(): React.ReactElement {
           "审查中自动更新",
         ),
         React.createElement("button", { onClick: () => void checkConnection() }, "检查服务连接"),
-        React.createElement(
-          "details",
-          { className: "identity-settings" },
-          React.createElement("summary", null, "权限设置"),
-          React.createElement(
-            "select",
-            {
-              value: identity.role,
-              onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
-                setIdentity({ ...identity, role: e.target.value as Identity["role"] }),
-            },
-            React.createElement("option", { value: "developer" }, "提交审查"),
-            React.createElement("option", { value: "approver" }, "审核修复"),
-            React.createElement("option", { value: "admin" }, "系统管理员"),
-          ),
-          React.createElement("div", { className: "hint" }, "演示环境用此项模拟权限；正式系统会由统一登录自动填充。"),
-        ),
+        React.createElement("span", { className: "muted" }, identity.role === "admin" ? "管理员" : identity.role === "approver" ? "审批人" : "开发者"),
+        React.createElement("button", { type: "button", onClick: onLogout }, "退出登录"),
       ),
     ),
     React.createElement(
@@ -358,7 +330,7 @@ export default function App(): React.ReactElement {
       { className: "layout" },
       React.createElement(
         "div",
-        null,
+        { id: "create-review" },
         React.createElement(ErrorBanner, { error }),
         notice ? React.createElement("div", { className: "notice-box" }, notice) : null,
         React.createElement(CreateForm, { onSubmit: onCreate, busy }),
@@ -408,10 +380,16 @@ export default function App(): React.ReactElement {
               React.createElement(
                 "div",
                 { className: "task-toolbar" },
-                React.createElement("strong", null, `正在查看：${detail.task.id}`),
+                React.createElement("strong", null, `正在查看：${detail.task.custom_task_id || detail.task.id}`),
                 React.createElement("button", { type: "button", onClick: leaveTask }, "结束查看，准备下一份代码"),
               ),
               React.createElement(TaskHeader, { detail }),
+              !TERMINAL.has(detail.task.status)
+                ? React.createElement("div", { className: "processing-banner", role: "status" },
+                    React.createElement("span", { className: "spinner", "aria-hidden": "true" }),
+                    React.createElement("span", null, `正在审查中：${detail.task.current_step || "Agent 正在协作处理"}，页面会自动更新`),
+                  )
+                : null,
               React.createElement(ResumePanel, {
                 detail,
                 canResume,
@@ -466,4 +444,17 @@ export default function App(): React.ReactElement {
       ),
     ),
   );
+}
+
+export default function App(): React.ReactElement {
+  const [identity, setIdentity] = React.useState<Identity | null>(readStoredIdentity);
+  if (!identity) return React.createElement(AuthPage, { onAuthenticated: setIdentity });
+  return React.createElement(Workbench, {
+    identity,
+    onLogout: () => {
+      if (identity.token) void new CodePilotClient(identity).authLogout(identity.token);
+      window.localStorage.removeItem("codepilot.identity");
+      setIdentity(null);
+    },
+  });
 }

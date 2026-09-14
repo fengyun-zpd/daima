@@ -11,6 +11,7 @@ from fastapi import Depends, Header, Request
 from sqlalchemy.orm import Session, sessionmaker
 
 from a2a.registry import AgentRegistry
+from apps.api.auth import AuthService
 from agents.coordinator.coordinator import Coordinator
 from domain.config import CodePilotConfig, load_config
 from domain.enums import ActorRole
@@ -32,6 +33,7 @@ CONFIG_FILE = "examples/.codepilot.yaml"
 class Actor:
     actor_id: str
     role: ActorRole
+    username: str | None = None
 
     @property
     def is_admin(self) -> bool:
@@ -39,14 +41,26 @@ class Actor:
 
 
 def get_actor(
+    request: Request,
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
     x_actor_id: Annotated[str | None, Header(alias="X-Actor-Id")] = None,
     x_actor_role: Annotated[str | None, Header(alias="X-Actor-Role")] = None,
 ) -> Actor:
-    """MVP 演示身份：请求头 ``X-Actor-Id`` / ``X-Actor-Role``（生产应替换为 JWT/OIDC）。"""
+    """优先使用登录令牌；保留旧身份头以兼容内部 Agent 与自动化测试。"""
+    if authorization:
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() != "bearer" or not token.strip():
+            raise CodePilotError(ErrorCode.UNAUTHORIZED, "登录令牌格式不正确，请重新登录。")
+        user = AuthService(get_container(request).session_factory).authenticate(token.strip())
+        try:
+            role = ActorRole(user.role)
+        except ValueError as exc:
+            raise CodePilotError(ErrorCode.PERMISSION_DENIED, "账户角色配置无效。") from exc
+        return Actor(actor_id=user.employee_id, role=role, username=user.username)
     if not x_actor_id or not x_actor_role:
         raise CodePilotError(
             ErrorCode.INVALID_INPUT,
-            "缺少身份请求头 X-Actor-Id 与 X-Actor-Role",
+            "请先登录后再使用审查工作台。",
             details={"required_headers": ["X-Actor-Id", "X-Actor-Role"]},
         )
     try:

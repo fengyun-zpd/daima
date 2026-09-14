@@ -30,6 +30,7 @@ class ErrorCode(StrEnum):
     # --- 权限与越权 ---
     PERMISSION_DENIED = "PERMISSION_DENIED"
     FORBIDDEN = "FORBIDDEN"
+    UNAUTHORIZED = "UNAUTHORIZED"
 
     # --- Agent 预算与循环 ---
     STEP_LIMIT_EXCEEDED = "STEP_LIMIT_EXCEEDED"
@@ -99,6 +100,7 @@ ERROR_SPECS: dict[ErrorCode, ErrorSpec] = {
     # 权限类：永不重试
     ErrorCode.PERMISSION_DENIED: ErrorSpec(403, False, True, _NEEDS_HUMAN, "角色或 Agent 能力 allowlist 拒绝该调用"),
     ErrorCode.FORBIDDEN: ErrorSpec(403, False, False, None, "角色无权执行该操作（例如写入 main/develop）"),
+    ErrorCode.UNAUTHORIZED: ErrorSpec(401, False, False, None, "登录信息无效或已经过期"),
     # 预算与循环
     ErrorCode.STEP_LIMIT_EXCEEDED: ErrorSpec(409, False, True, _NEEDS_HUMAN, "Agent 超过单次循环最大步数"),
     ErrorCode.TOOL_LOOP_DETECTED: ErrorSpec(409, False, True, _NEEDS_HUMAN, "同工具同参数连续调用超过阈值"),

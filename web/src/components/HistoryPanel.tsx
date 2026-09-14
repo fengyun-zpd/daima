@@ -25,12 +25,12 @@ export function HistoryPanel({
   const [filter, setFilter] = React.useState("");
   const normalized = filter.trim().toLowerCase();
   const visible = normalized
-    ? tasks.filter((task) => `${task.id} ${task.base_commit} ${task.status}`.toLowerCase().includes(normalized))
+    ? tasks.filter((task) => `${task.id} ${task.custom_task_id ?? ""} ${task.base_commit} ${task.status}`.toLowerCase().includes(normalized))
     : tasks;
 
   return React.createElement(
     "div",
-    { className: "panel" },
+    { className: "panel", id: "review-history" },
     React.createElement(
       "div",
       { className: "row" },
@@ -55,10 +55,10 @@ export function HistoryPanel({
               React.createElement(
                 "div",
                 { className: "row" },
-                React.createElement("strong", { className: "history-id", title: task.id }, task.id),
+                React.createElement("strong", { className: "history-id", title: task.custom_task_id || task.id }, task.custom_task_id || task.id),
                 React.createElement(StatusBadge, { status: task.status }),
               ),
-              React.createElement("div", { className: "hint" }, `${MODE_LABEL[task.mode] ?? task.mode} · ${task.base_commit || "未填写版本备注"}`),
+              React.createElement("div", { className: "hint" }, `${MODE_LABEL[task.mode] ?? task.mode} · ${task.base_commit || "未填写版本备注"} · 系统 ID ${task.id}`),
               React.createElement("div", { className: "hint" }, `创建于 ${new Date(task.created_at).toLocaleString("zh-CN")}`),
               React.createElement("button", { type: "button", onClick: () => onOpen(task.id) }, "查看这份审查结果"),
             ),

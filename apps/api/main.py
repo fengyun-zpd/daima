@@ -23,6 +23,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import select
 
 from apps.api.agent_service import TaskScheduler
+from apps.api.auth import AuthService
 from apps.api.deps import (
     Actor,
     AppContainer,
@@ -30,6 +31,7 @@ from apps.api.deps import (
     build_agent_service_for,
     build_container,
     get_container,
+    get_actor,
     get_idempotency_key,
     require_roles,
 )
@@ -47,6 +49,10 @@ from apps.api.schemas import (
     PatchResponse,
     ReviewDetailResponse,
     ReviewTaskResponse,
+    AuthResponse,
+    LoginRequest,
+    RegisterRequest,
+    UserResponse,
 )
 from apps.api.serializers import audit_response, comment_response, review_detail, task_response
 from apps.api.service import ReviewService
@@ -96,6 +102,7 @@ def create_app(
         resolved = container or build_container(url=database_url, auto_create=auto_create)
         app.state.container = resolved
         app.state.service = ReviewService(resolved)
+        app.state.auth_service = AuthService(resolved.session_factory)
         app.state.schedule_on_create = schedule_on_create
         if include_internal:
             agent_service = build_agent_service_for(resolved)
@@ -152,6 +159,32 @@ def create_app(
 
     def service(request: Request) -> ReviewService:
         return request.app.state.service
+
+    # ---- 账户登录 ---------------------------------------------------------------
+    @app.post("/api/v1/auth/register", response_model=AuthResponse, tags=["auth"])
+    async def register_account(payload: RegisterRequest, request: Request) -> AuthResponse:
+        result = request.app.state.auth_service.register(
+            employee_id=payload.employee_id,
+            username=payload.username,
+            password=payload.password,
+        )
+        return AuthResponse.model_validate(result)
+
+    @app.post("/api/v1/auth/login", response_model=AuthResponse, tags=["auth"])
+    async def login_account(payload: LoginRequest, request: Request) -> AuthResponse:
+        result = request.app.state.auth_service.login(account=payload.account, password=payload.password)
+        return AuthResponse.model_validate(result)
+
+    @app.get("/api/v1/auth/me", response_model=UserResponse, tags=["auth"])
+    async def current_account(actor: Annotated[Actor, Depends(get_actor)]) -> UserResponse:
+        return UserResponse(id="", employee_id=actor.actor_id, username=actor.username or actor.actor_id, role=str(actor.role))
+
+    @app.post("/api/v1/auth/logout", status_code=204, tags=["auth"])
+    async def logout_account(request: Request) -> None:
+        authorization = request.headers.get("Authorization", "")
+        scheme, _, token = authorization.partition(" ")
+        if scheme.lower() == "bearer" and token.strip():
+            request.app.state.auth_service.logout(token.strip())
 
     # ---- 健康检查 ---------------------------------------------------------------
     @app.get("/healthz", tags=["ops"])

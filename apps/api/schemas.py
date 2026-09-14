@@ -25,6 +25,31 @@ class CreateReviewRequest(StrictModel):
     context_policy: ContextPolicy = ContextPolicy.FUNCTION
     base_commit: str = Field(min_length=1, max_length=128)
     mode: RunMode | None = Field(default=None, description="覆盖服务默认运行模式")
+    custom_task_id: str | None = Field(default=None, max_length=128, description="用户可读的任务编号")
+
+
+class RegisterRequest(StrictModel):
+    employee_id: str = Field(min_length=2, max_length=64)
+    username: str = Field(min_length=2, max_length=64)
+    password: str = Field(min_length=8, max_length=128)
+
+
+class LoginRequest(StrictModel):
+    account: str = Field(min_length=2, max_length=64, description="用户名或工号")
+    password: str = Field(min_length=1, max_length=128)
+
+
+class UserResponse(StrictModel):
+    id: str
+    employee_id: str
+    username: str
+    role: str
+
+
+class AuthResponse(StrictModel):
+    token: str
+    expires_at: datetime
+    user: UserResponse
 
 
 class ApprovalRequest(StrictModel):
@@ -128,6 +153,7 @@ class ReviewTaskResponse(StrictModel):
     state_version: int
     owner: str
     actor_id: str
+    custom_task_id: str | None = None
     input_type: str
     base_commit: str
     context_policy: str
@@ -223,6 +249,7 @@ class EvalRunResponse(StrictModel):
 
 __all__ = [
     "AgentCardResponse",
+    "AuthResponse",
     "ApprovalRequest",
     "ArtifactSummary",
     "AuditEventResponse",
@@ -231,6 +258,8 @@ __all__ = [
     "CreateA2ATaskRequest",
     "CreateFixRequest",
     "CreateReviewRequest",
+    "LoginRequest",
+    "RegisterRequest",
     "CreatedReviewResponse",
     "ErrorResponse",
     "EvalRunRequest",
@@ -240,5 +269,6 @@ __all__ = [
     "ResumeRequest",
     "ReviewDetailResponse",
     "ReviewTaskResponse",
+    "UserResponse",
     "StrictModel",
 ]

@@ -14,6 +14,20 @@ export interface Identity {
   actorId: string;
   displayName?: string;
   role: ActorRole;
+  token?: string;
+}
+
+export interface AuthUser {
+  id: string;
+  employee_id: string;
+  username: string;
+  role: ActorRole;
+}
+
+export interface AuthResponse {
+  token: string;
+  expires_at: string;
+  user: AuthUser;
 }
 
 /** 后端返回的可展示错误：保留 HTTP 状态码，便于页面区分 403 / 409 / 422 / 503。 */
@@ -85,10 +99,9 @@ export class CodePilotClient {
   }
 
   private headers(write: boolean, idempotencyKey?: string): HeadersInit {
-    const headers: Record<string, string> = {
-      "X-Actor-Id": this.identity.actorId,
-      "X-Actor-Role": this.identity.role,
-    };
+    const headers: Record<string, string> = this.identity.token
+      ? { Authorization: `Bearer ${this.identity.token}` }
+      : { "X-Actor-Id": this.identity.actorId, "X-Actor-Role": this.identity.role };
     if (write) {
       headers["Content-Type"] = "application/json";
       headers["Idempotency-Key"] = idempotencyKey ?? newIdempotencyKey();
@@ -133,6 +146,7 @@ export class CodePilotClient {
       base_commit: string;
       context_policy: string;
       mode: string;
+      custom_task_id?: string;
     },
     options: WriteOptions = {},
   ): Promise<{ task: ReviewTask; created: boolean; detail_url: string }> {
@@ -142,6 +156,18 @@ export class CodePilotClient {
       true,
       options.idempotencyKey,
     );
+  }
+
+  authRegister(body: { employee_id: string; username: string; password: string }): Promise<AuthResponse> {
+    return this.request<AuthResponse>("/api/v1/auth/register", { method: "POST", body: JSON.stringify(body) }, true, undefined);
+  }
+
+  authLogin(body: { account: string; password: string }): Promise<AuthResponse> {
+    return this.request<AuthResponse>("/api/v1/auth/login", { method: "POST", body: JSON.stringify(body) }, true, undefined);
+  }
+
+  authLogout(token: string): Promise<void> {
+    return new CodePilotClient({ ...this.identity, token }).request<void>("/api/v1/auth/logout", { method: "POST" }, true, undefined);
   }
 
   getReview(taskId: string): Promise<ReviewDetail> {

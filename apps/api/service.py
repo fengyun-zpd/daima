@@ -54,6 +54,7 @@ class ReviewService:
             idempotency_key=idempotency_key,
             context_policy=request.context_policy,
             mode=mode,
+            custom_task_id=request.custom_task_id.strip() if request.custom_task_id else None,
         )
         task, created = self.container.coordinator.create_review(review_request)
         with self.container.session() as session:

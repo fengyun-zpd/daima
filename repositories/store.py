@@ -100,6 +100,13 @@ class ReviewTaskStore:
         )
         return self.session.execute(statement).scalar_one_or_none()
 
+    def find_by_custom_id(self, *, actor_id: str, custom_task_id: str) -> ReviewTask | None:
+        if not custom_task_id:
+            return None
+        return self.session.execute(
+            select(ReviewTask).where(ReviewTask.actor_id == actor_id, ReviewTask.custom_task_id == custom_task_id)
+        ).scalar_one_or_none()
+
     def create(
         self,
         *,
@@ -117,10 +124,15 @@ class ReviewTaskStore:
         input_ref: str | None = None,
         command_type: str = "create_review",
         created_at: datetime | None = None,
+        custom_task_id: str | None = None,
     ) -> tuple[ReviewTask, bool]:
         """创建父任务；命中幂等键时返回历史任务（FR-002）。"""
         if len(idempotency_key) < 8:
             raise CodePilotError(ErrorCode.IDEMPOTENCY_KEY_REQUIRED, "幂等键长度必须 >= 8")
+
+        custom_task_id = custom_task_id.strip() if custom_task_id else None
+        if custom_task_id and self.find_by_custom_id(actor_id=actor_id, custom_task_id=custom_task_id) is not None:
+            raise CodePilotError(ErrorCode.CONFLICT, f"任务编号 {custom_task_id} 已存在，请换一个。")
 
         existing = self.find_by_idempotency(
             actor_id=actor_id, command_type=command_type, idempotency_key=idempotency_key
@@ -142,6 +154,7 @@ class ReviewTaskStore:
             correlation_id=f"{task_id}:root",
             actor_id=actor_id,
             actor_role=actor_role,
+            custom_task_id=custom_task_id,
             command_type=command_type,
             mode=mode,
             input_type=input_type,

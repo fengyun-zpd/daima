@@ -14,6 +14,7 @@ export interface CreateFormValues {
   baseCommit: string;
   contextPolicy: string;
   mode: string;
+  customTaskId: string;
 }
 
 type InputMode = "diff" | "zip" | "python";
@@ -29,6 +30,8 @@ const DEFAULT_BASE_COMMIT = "本次上传内容";
 function sizeLabel(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(bytes >= 1024 * 1024 ? 1 : 2)} MB`;
 }
+
+type SelectedFile = { name: string; size: number; source: string };
 
 async function encodeBase64(file: File): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -59,9 +62,11 @@ export function CreateForm({
   const [baseCommit, setBaseCommit] = React.useState(DEFAULT_BASE_COMMIT);
   const [contextPolicy, setContextPolicy] = React.useState("function");
   const [mode, setMode] = React.useState("a2a");
+  const [customTaskId, setCustomTaskId] = React.useState("");
   const [formError, setFormError] = React.useState<string | null>(null);
   const [fileInfo, setFileInfo] = React.useState<string | null>(null);
   const [dragging, setDragging] = React.useState(false);
+  const [selectedFiles, setSelectedFiles] = React.useState<SelectedFile[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const clearForm = () => {
@@ -72,41 +77,64 @@ export function CreateForm({
     setBaseCommit(DEFAULT_BASE_COMMIT);
     setContextPolicy("function");
     setMode("a2a");
+    setCustomTaskId("");
     setFormError(null);
     setFileInfo(null);
+    setSelectedFiles([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const receiveFile = async (file: File) => {
-    const lowerName = file.name.toLowerCase();
-    if (!lowerName.endsWith(".py") && !lowerName.endsWith(".zip")) {
+  const receiveFiles = async (files: File[]) => {
+    if (!files.length) return;
+    const hasZip = files.some((file) => file.name.toLowerCase().endsWith(".zip"));
+    if (hasZip && files.length !== 1) {
+      setFormError("ZIP 项目包不能和其他文件同时选择，请单独上传 ZIP。 ");
+      return;
+    }
+    if (files.some((file) => !file.name.toLowerCase().endsWith(".py") && !file.name.toLowerCase().endsWith(".zip"))) {
       setFormError("请放入 .py 文件或 Python 项目 .zip 文件。");
       setFileInfo(null);
       return;
     }
-    if (file.size > MAX_UPLOAD_BYTES || (lowerName.endsWith(".zip") && file.size > MAX_ZIP_BYTES)) {
-      setFormError(`文件 ${sizeLabel(file.size)} 超过前端上限 100 MB，请拆分后再提交。`);
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    if (files.some((file) => file.size > MAX_ZIP_BYTES)) {
+      setFormError("文件超过前端上限 100 MB，请拆分后再提交。");
+      setFileInfo(null);
+      return;
+    }
+    if (totalSize > MAX_UPLOAD_BYTES) {
+      setFormError(`所选文件合计 ${sizeLabel(totalSize)}，超过 100 MB 上限，请拆分后再提交。`);
       setFileInfo(null);
       return;
     }
 
     try {
-      if (lowerName.endsWith(".zip")) {
+      if (hasZip) {
+        const file = files[0];
         const encoded = await encodeBase64(file);
         if (encoded.length > MAX_ZIP_BASE64_CHARS) throw new Error("ZIP 编码后超过可提交大小，请拆分后再试。");
         setInputMode("zip");
         setContent(encoded);
         setPythonPath("");
         setPythonSource("");
+        setSelectedFiles([]);
         setFileInfo(`${file.name} · ${sizeLabel(file.size)} · 已准备好审查项目中的 Python 文件`);
       } else {
-        const source = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
-        if (!source.trim()) throw new Error("Python 文件内容不能为空。");
+        const names = files.map((file) => file.name.toLowerCase());
+        if (new Set(names).size !== names.length) throw new Error("存在同名 Python 文件，请改名或改用 ZIP 项目包上传。");
+        const selected = await Promise.all(files.map(async (file) => {
+          const source = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
+          if (!source.trim()) throw new Error(`Python 文件 ${file.name} 内容不能为空。`);
+          return { name: file.name, size: file.size, source };
+        }));
+        const combined = selected.length > 1 ? selected.map((file) => buildPythonFileDiff(file.name, file.source)).join("\n") : "";
+        if (combined.length > MAX_DIFF_CHARS) throw new Error("多个文件合并后的审查内容超过前端上限，请拆分后再提交。");
         setInputMode("python");
-        setPythonPath(file.name);
-        setPythonSource(source);
-        setContent("");
-        setFileInfo(`${file.name} · ${sizeLabel(file.size)} · 已准备好审查`);
+        setSelectedFiles(selected);
+        setPythonPath(selected.length === 1 ? selected[0].name : "");
+        setPythonSource(selected.length === 1 ? selected[0].source : "");
+        setContent(combined);
+        setFileInfo(`${selected.length} 个 Python 文件 · 合计 ${sizeLabel(totalSize)} · 已准备好审查`);
       }
       setFormError(null);
     } catch (error) {
@@ -116,15 +144,13 @@ export function CreateForm({
   };
 
   const onPythonFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) await receiveFile(file);
+    await receiveFiles(Array.from(event.target.files ?? []));
   };
 
   const onDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    if (file) await receiveFile(file);
+    await receiveFiles(Array.from(event.dataTransfer.files ?? []));
   };
 
   const applyDemo = (id: string) => {
@@ -134,12 +160,14 @@ export function CreateForm({
     setContent(selected.diff);
     setPythonPath("");
     setPythonSource("");
+    setSelectedFiles([]);
     setFormError(null);
     setFileInfo(`已载入演示用例：${selected.label}`);
   };
 
   const validate = (): string | null => {
     if (inputMode === "python") {
+      if (selectedFiles.length > 1) return content.trim() ? null : "正在准备多文件内容，请重新选择文件。";
       try {
         buildPythonFileDiff(pythonPath, pythonSource);
       } catch (error) {
@@ -166,7 +194,11 @@ export function CreateForm({
           setFormError(problem);
           return;
         }
-        const submittedContent = inputMode === "python" ? buildPythonFileDiff(pythonPath, pythonSource) : content;
+        const submittedContent = inputMode === "python"
+          ? selectedFiles.length > 1
+            ? selectedFiles.map((file) => buildPythonFileDiff(file.name, file.source)).join("\n")
+            : buildPythonFileDiff(pythonPath, pythonSource)
+          : content;
         setFormError(null);
         // 后端字段名为 base_commit；界面把它称作版本备注，避免让新用户误以为会读取本机 Git。
         onSubmit({
@@ -175,11 +207,12 @@ export function CreateForm({
           baseCommit: baseCommit.trim() || DEFAULT_BASE_COMMIT,
           contextPolicy,
           mode,
+          customTaskId: customTaskId.trim(),
         });
       },
     },
     React.createElement("h2", null, "1. 放入要审查的代码"),
-    React.createElement("div", { className: "hint" }, "把文件拖到下方，或点击选择文件。支持 .py 和 Python 项目 .zip，单个文件最大 100 MB。"),
+    React.createElement("div", { className: "hint" }, "把文件拖到下方，或点击选择文件。支持多个 .py 文件和 Python 项目 .zip，所选文件合计最大 100 MB。"),
     React.createElement(
       "div",
       {
@@ -191,7 +224,7 @@ export function CreateForm({
         onDragLeave: () => setDragging(false),
         onDrop,
       },
-      React.createElement("strong", null, "拖入 .py 或 .zip 文件"),
+      React.createElement("strong", null, "拖入一个或多个 .py 文件，或一个 .zip 项目包"),
       React.createElement("span", { className: "muted" }, "也可以从此电脑选择文件"),
       React.createElement("button", { type: "button", onClick: () => fileInputRef.current?.click() }, "选择本机文件"),
       React.createElement("input", {
@@ -199,10 +232,27 @@ export function CreateForm({
         className: "visually-hidden",
         type: "file",
         accept: ".py,.zip,text/x-python,application/x-python,application/zip",
+        multiple: true,
         onChange: onPythonFile,
       }),
     ),
     fileInfo ? React.createElement("div", { className: "file-ready" }, fileInfo) : null,
+    selectedFiles.length > 0
+      ? React.createElement(
+          "details",
+          { className: "file-list" },
+          React.createElement("summary", null, `查看已选择的 ${selectedFiles.length} 个文件`),
+          React.createElement("ul", null, selectedFiles.map((file) => React.createElement("li", { key: file.name }, `${file.name} · ${sizeLabel(file.size)}`))),
+        )
+      : null,
+    React.createElement("label", null, "任务编号（可自己填写，不填则系统自动生成）"),
+    React.createElement("input", {
+      value: customTaskId,
+      maxLength: 128,
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) => setCustomTaskId(event.target.value),
+      placeholder: "例如 2026-001 或 bug-login-01",
+    }),
+    React.createElement("div", { className: "hint" }, "同一用户名下不能重复；编号只用于查找和历史记录，不影响系统内部任务 ID。"),
     React.createElement("label", null, "没有文件时，可选择其他输入方式"),
     React.createElement(
       "select",
@@ -283,7 +333,7 @@ export function CreateForm({
     React.createElement(
       "div",
       { className: "row", style: { marginTop: 10 } },
-      React.createElement("button", { className: "primary", type: "submit", disabled: busy }, busy ? "正在创建…" : "创建审查任务"),
+      React.createElement("button", { className: "primary", type: "submit", disabled: busy }, busy ? React.createElement(React.Fragment, null, React.createElement("span", { className: "spinner", "aria-hidden": "true" }), "正在创建审查…") : "创建审查任务"),
       React.createElement("button", { type: "button", disabled: busy, onClick: clearForm }, "清空，准备另一份代码"),
     ),
     React.createElement("div", { className: "hint" }, "创建后，右侧会自动显示协作过程和审查结论。"),

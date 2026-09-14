@@ -67,6 +67,34 @@ class TimestampMixin:
     )
 
 
+class UserAccount(Base, TimestampMixin):
+    """工作台账户。密码只保存 PBKDF2 派生值，不保存明文。"""
+
+    __tablename__ = "user_account"
+    __table_args__ = (
+        UniqueConstraint("employee_id", name="uq_user_account_employee_id"),
+        UniqueConstraint("username", name="uq_user_account_username"),
+    )
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    employee_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    username: Mapped[str] = mapped_column(String(64), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
+    role: Mapped[str] = mapped_column(String(32), nullable=False, default="developer")
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_session"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(64), ForeignKey("user_account.id"), nullable=False, index=True)
+    token_hash: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    revoked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
 # ---------------------------------------------------------------------------
 # 父任务
 # ---------------------------------------------------------------------------
@@ -84,6 +112,7 @@ class ReviewTask(Base, TimestampMixin):
         UniqueConstraint("actor_id", "command_type", "idempotency_key", name="uq_review_task_idempotency"),
         Index("ix_review_task_input_hash", "input_hash"),
         Index("ix_review_task_parent_state", "status", "state_version"),
+        UniqueConstraint("actor_id", "custom_task_id", name="uq_review_task_actor_custom_id"),
     )
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -91,6 +120,7 @@ class ReviewTask(Base, TimestampMixin):
     correlation_id: Mapped[str] = mapped_column(String(64), nullable=False)
     actor_id: Mapped[str] = mapped_column(String(128), nullable=False)
     actor_role: Mapped[str] = mapped_column(String(32), nullable=False)
+    custom_task_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
     command_type: Mapped[str] = mapped_column(String(32), nullable=False, default="create_review")
     mode: Mapped[str] = mapped_column(String(16), nullable=False)
 
@@ -557,6 +587,8 @@ class IdempotencyRecord(Base, TimestampMixin):
 
 
 ALL_TABLES = (
+    UserAccount.__tablename__,
+    AuthSession.__tablename__,
     ReviewTask.__tablename__,
     ReviewComment.__tablename__,
     FixPatch.__tablename__,
@@ -584,6 +616,7 @@ __all__ = [
     "A2AArtifact",
     "A2AMessage",
     "A2ATask",
+    "AuthSession",
     "Approval",
     "AuditEvent",
     "Base",
@@ -598,4 +631,5 @@ __all__ = [
     "SandboxRun",
     "TimestampMixin",
     "ToolExecution",
+    "UserAccount",
 ]

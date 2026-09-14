@@ -39,6 +39,7 @@ def task_response(row: ReviewTask) -> ReviewTaskResponse:
         state_version=row.state_version,
         owner=row.owner,
         actor_id=row.actor_id,
+        custom_task_id=row.custom_task_id,
         input_type=row.input_type,
         base_commit=row.base_commit,
         context_policy=row.context_policy,

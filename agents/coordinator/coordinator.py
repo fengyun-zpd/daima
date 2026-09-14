@@ -81,6 +81,7 @@ class ReviewRequest:
     idempotency_key: str
     context_policy: ContextPolicy = ContextPolicy.FUNCTION
     mode: RunMode = RunMode.A2A
+    custom_task_id: str | None = None
 
 
 @dataclass(slots=True)
@@ -172,6 +173,7 @@ class Coordinator:
                 "content": request.content,
                 "base_commit": request.base_commit,
                 "context_policy": str(request.context_policy),
+                "custom_task_id": request.custom_task_id,
             }
         )
         summary = {
@@ -200,6 +202,11 @@ class Coordinator:
                     )
                 return existing, False
 
+            if request.custom_task_id and store.find_by_custom_id(
+                actor_id=request.actor_id, custom_task_id=request.custom_task_id.strip()
+            ) is not None:
+                raise CodePilotError(ErrorCode.CONFLICT, f"任务编号 {request.custom_task_id} 已存在，请换一个。")
+
             self.content_store.store_workspace(task_id, workspace.to_payload())
             task, created = store.create(
                 task_id=task_id,
@@ -215,6 +222,7 @@ class Coordinator:
                 idempotency_key=request.idempotency_key,
                 input_ref=ContentStore.workspace_ref(task_id),
                 created_at=utcnow(),
+                custom_task_id=request.custom_task_id,
             )
             resolved_agents: dict[str, str] = {}
             negotiation_errors: dict[str, dict[str, str]] = {}

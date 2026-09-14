@@ -78,6 +78,7 @@ export interface ReviewTask {
   state_version: number;
   owner: string;
   actor_id: string;
+  custom_task_id?: string | null;
   input_type: string;
   base_commit: string;
   context_policy: string;

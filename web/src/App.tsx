@@ -107,6 +107,11 @@ export default function App(): React.ReactElement {
 
   const loadAudit = React.useCallback(
     async (id: string) => {
+      if (identity.role !== "admin") {
+        setAudit([]);
+        setAuditError(null);
+        return;
+      }
       try {
         setAudit(await client.listAudit({ taskId: id || undefined, limit: 200 }));
         setAuditError(null);
@@ -119,7 +124,7 @@ export default function App(): React.ReactElement {
         );
       }
     },
-    [client],
+    [client, identity.role],
   );
 
   React.useEffect(() => {
@@ -161,7 +166,13 @@ export default function App(): React.ReactElement {
       keys.clear(action);
       setTaskId(created.task.id);
       setError(null);
-      setNotice(created.created ? null : "后端命中幂等记录，返回的是原任务（未重复创建）。");
+      setNotice(
+        created.created
+          ? values.mode === "a2a"
+            ? "任务已创建：代码审查 Agent 和影响分析 Agent 已开始分工协作，结果会自动显示在右侧。"
+            : "任务已创建，审查结果会自动显示在右侧。"
+          : "检测到这是同一次提交，已打开原任务。",
+      );
       await refresh(created.task.id);
       await loadAudit(created.task.id);
     } catch (exc) {
@@ -217,9 +228,9 @@ export default function App(): React.ReactElement {
   const status = detail?.task.status ?? "";
   const fixDisabledReason =
     status !== "REVIEWED"
-      ? `只有 REVIEWED 状态可以生成候选补丁（当前 ${status || "-"}）`
+      ? "审查完成后才能让修复 Agent 生成建议"
       : detail?.task.mode === "offline"
-        ? "offline 模式不生成补丁"
+        ? "离线规则扫描不生成修复建议"
         : "";
 
   return React.createElement(
@@ -233,8 +244,8 @@ export default function App(): React.ReactElement {
         "span",
         { className: "muted" },
         ready
-          ? `API ${ready.status} · transport=${ready.transport} · db=${ready.database} · tools ${ready.tools.length} · agents ${ready.agents.length} · 待恢复 ${ready.recoverable_tasks}`
-          : "API 未就绪",
+          ? `系统已就绪 · ${ready.agents.length} 个 Agent 可协作 · ${ready.transport === "http" ? "HTTP 协作通道" : "本地协作通道"}`
+          : "系统连接中",
       ),
       React.createElement("div", { className: "spacer" }),
       React.createElement(
@@ -255,9 +266,9 @@ export default function App(): React.ReactElement {
             onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
               setIdentity({ ...identity, role: e.target.value as Identity["role"] }),
           },
-          React.createElement("option", { value: "developer" }, "developer"),
-          React.createElement("option", { value: "approver" }, "approver"),
-          React.createElement("option", { value: "admin" }, "admin"),
+          React.createElement("option", { value: "developer" }, "开发者"),
+          React.createElement("option", { value: "approver" }, "审批者"),
+          React.createElement("option", { value: "admin" }, "管理员"),
         ),
         React.createElement(
           "label",
@@ -285,8 +296,8 @@ export default function App(): React.ReactElement {
         React.createElement(
           "div",
           { className: "panel" },
-          React.createElement("h2", null, "当前任务"),
-          React.createElement("label", null, "任务 ID（可粘贴已有任务）"),
+          React.createElement("h2", null, "打开已有任务"),
+          React.createElement("label", null, "任务编号（仅在需要回看历史任务时填写）"),
           React.createElement(
             "div",
             { className: "row" },
@@ -300,7 +311,7 @@ export default function App(): React.ReactElement {
           React.createElement(
             "div",
             { className: "hint" },
-            "创建任务后自动加载；非终态任务每 2 秒轮询一次，进入终态或等待人工动作后自动停止（也可用 SSE 端点 /events）。",
+            "刚创建的任务会自动显示在右侧。任务处理期间会自动刷新，不需要手动操作。",
           ),
         ),
         React.createElement(AuditPanel, {
@@ -313,7 +324,7 @@ export default function App(): React.ReactElement {
         "div",
         null,
         !detail
-          ? React.createElement("div", { className: "panel muted" }, "在左侧创建或加载一个审查任务。")
+          ? React.createElement("div", { className: "panel muted" }, "请先在左侧选择代码并创建任务。创建后，这里会展示 A2A 协作过程和审查结果。")
           : React.createElement(
               React.Fragment,
               null,

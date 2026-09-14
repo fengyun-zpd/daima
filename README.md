@@ -82,9 +82,10 @@ Windows：`./scripts/dev.ps1`；Linux/macOS：`./scripts/dev.sh`（自动完成�
 
 ### 1.3 Dashboard（审查工作台）
 
-Dashboard 是 Frontend 交付物，**直接进入工作台，没有营销页**：创建任务（diff/ZIP、`single`/`a2a`/`offline`）、
-查看父子任务时间线、Finding、风险等级、影响文件、Artifact、补丁 diff、验证证据、审批/合并、
-`NEEDS_HUMAN` 原因与 admin 恢复入口、审计事件，并显示 API ready 状态与实际 `transport`。
+Dashboard 是 Frontend 交付物，**直接进入工作台，没有营销页**。按“选择代码 → 选择审查方式 → 创建并查看结果”操作；
+代码来源支持 unified diff、Python 项目 ZIP 和单个本机 `.py` 文件。选择单个 `.py` 后，浏览器在本地读取内容并转换为
+新增文件 diff，绝不提交本机绝对路径。默认的 **A2A 多 Agent 协作** 会让代码审查 Agent 与影响分析 Agent 分工处理，
+界面会用中文展示协作过程、发现的问题、影响范围、修复建议、验证结果和人工确认入口。单文件可完成审查；想演示自动修复与测试验证时，请上传含 `tests/` 的 ZIP 项目包。
 
 两种启动方式（前端只使用相对路径 `/api`、`/internal`、`/healthz`、`/readyz`，因此无需配置后端地址）：
 

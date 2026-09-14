@@ -31,6 +31,18 @@ from repositories.store import A2ATaskStore, ReviewTaskStore
 DEV_HEADERS = {"X-Actor-Id": "dev-1", "X-Actor-Role": "developer"}
 ADMIN_HEADERS = {"X-Actor-Id": "admin-1", "X-Actor-Role": "admin"}
 
+# 与 Dashboard 中“本机 Python 文件”输入一致：浏览器只在本地读文件，随后提交新增文件的标准 diff。
+PYTHON_FILE_UPLOAD_DIFF = (
+    "diff --git a/app/uploaded_check.py b/app/uploaded_check.py\n"
+    "new file mode 100644\n"
+    "--- /dev/null\n"
+    "+++ b/app/uploaded_check.py\n"
+    "@@ -0,0 +1,3 @@\n"
+    "+import subprocess\n"
+    '+API_KEY = "sk-live-local-upload-12345"\n'
+    '+subprocess.run("ls", shell=True)\n'
+)
+
 
 def make_container(tmp_path, *, config: CodePilotConfig | None = None):
     url = f"sqlite+pysqlite:///{(tmp_path / 'api.db').as_posix()}"
@@ -101,6 +113,23 @@ def test_vertical_slice_reaches_reviewed(client) -> None:
 
     assert payload["task"]["summary"]["findings"] >= 2
     assert payload["task"]["summary"]["risk_level"] in {"low", "medium", "high"}
+
+
+def test_dashboard_style_python_file_diff_reaches_a2a_review(client) -> None:
+    """验证本机 .py 文件转换后的 diff 可由 A2A 审查与影响分析 Agent 完整消费。"""
+    response = create_review(client, key="idem-python-upload-0001", diff=PYTHON_FILE_UPLOAD_DIFF)
+    assert response.status_code == 200, response.text
+    task_id = response.json()["task"]["id"]
+    client.container.coordinator.run(task_id)
+
+    detail = client.get(f"/api/v1/reviews/{task_id}", headers=DEV_HEADERS).json()
+    assert detail["task"]["status"] == str(ParentTaskStatus.REVIEWED)
+    assert {child["agent_id"] for child in detail["child_tasks"]} == {"review-agent", "impact-agent"}
+    assert {comment["rule_id"] for comment in detail["comments"]} >= {
+        "R002_HARDCODED_SECRET",
+        "R003_SHELL_TRUE",
+    }
+    assert "app/uploaded_check.py" in detail["task"]["summary"]["affected_files"]
 
 
 def test_artifacts_satisfy_schema_and_hash(client) -> None:

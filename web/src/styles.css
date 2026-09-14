@@ -256,6 +256,53 @@ th {
   font-size: 12px;
   color: var(--muted);
   margin-top: 6px;
+  line-height: 1.55;
+}
+
+.a2a-callout {
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid #315d9f;
+  background: #12233b;
+  color: #c5dcff;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.a2a-callout strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #8fbbff;
+}
+
+.a2a-badge {
+  color: #a8c8ff;
+  border-color: #315d9f;
+}
+
+.task-state {
+  margin: 4px 0 2px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.a2a-flow {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.a2a-timeline {
+  margin-top: 10px;
+}
+
+.technical-details {
+  margin-top: 10px;
+}
+
+.technical-details summary {
+  cursor: pointer;
 }
 
 .notice-box {
@@ -313,4 +360,21 @@ th {
 
 .severity-info {
   color: var(--info);
+}
+
+@media (max-width: 860px) {
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .identity {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }

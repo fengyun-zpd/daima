@@ -55,7 +55,7 @@ def test_dashboard_renders_every_required_surface() -> None:
     assert "Timeline" in common and "TaskTimeline" in task_view
     assert "FindingsPanel" in task_view
     assert "ImpactPanel" in task_view
-    assert "PatchPanel" in task_view and "验证证据" in task_view
+    assert "PatchPanel" in task_view and "验证结果" in task_view
     assert "approval" in _read(WEB / "src" / "api.ts")
     assert "AuditPanel" in common or "AuditPanel" in _read(WEB / "src" / "components" / "AuditPanel.tsx")
     # single / a2a / offline 三种模式都必须可选。
@@ -136,6 +136,19 @@ def test_zip_upload_is_size_limited_in_frontend() -> None:
     assert "超过前端上限" in form
 
 
+def test_dashboard_can_review_a_local_python_file_and_explain_a2a() -> None:
+    form = _read(WEB / "src" / "components" / "CreateForm.tsx")
+    timeline = _read(WEB / "src" / "components" / "Common.tsx")
+    input_helpers = _read(WEB / "src" / "review-input.ts")
+    assert 'accept: ".py,text/x-python,application/x-python"' in form
+    assert "onPythonFile" in form and "buildPythonFileDiff" in form
+    assert "A2A 多 Agent 协作" in form and "代码审查 Agent" in form
+    assert "A2A 协作过程" in timeline
+    assert "review-agent" in timeline and "impact-agent" in timeline
+    assert "DEMO_CASES" in input_helpers
+    assert all(case in input_helpers for case in ('"secret-shell"', '"sql-concat"', '"clean-python"'))
+
+
 def test_dashboard_gates_write_buttons_by_role_and_status() -> None:
     view = _read(WEB / "src" / "components" / "TaskView.tsx")
     app = _read(WEB / "src" / "App.tsx")
@@ -203,6 +216,68 @@ def test_operation_keys_behavior_with_real_node(tmp_path: Path) -> None:
     )
     assert run.returncode == 0, run.stdout + run.stderr
     assert "OPERATION_KEYS_OK" in run.stdout
+
+
+@pytest.mark.skipif(
+    (ROOT / "web" / "node_modules").exists() is False,
+    reason="未安装 web/node_modules，跳过真实前端行为测试",
+)
+def test_python_file_input_is_converted_to_safe_unified_diff(tmp_path: Path) -> None:
+    """真实执行浏览器侧转换逻辑，覆盖 Windows 文件名、换行、非法路径和演示用例。"""
+    import shutil
+
+    node = shutil.which("node")
+    esbuild = WEB / "node_modules" / "esbuild" / "bin" / "esbuild"
+    if node is None or not esbuild.exists():
+        pytest.skip("node 或 esbuild 不可用")
+    bundle = tmp_path / "review-input.mjs"
+    built = subprocess.run(
+        [
+            node,
+            str(esbuild),
+            str(WEB / "src" / "review-input.ts"),
+            "--bundle",
+            "--format=esm",
+            f"--outfile={bundle}",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    assert built.returncode == 0, built.stderr
+    script = tmp_path / "check-python-input.mjs"
+    script.write_text(
+        "\n".join(
+            [
+                f'import {{ buildPythonFileDiff, DEMO_CASES }} from "{bundle.as_uri()}";',
+                'const diff = buildPythonFileDiff("app\\\\config.py", "API_KEY = \'demo\'\\r\\nprint(API_KEY)\\r\\n");',
+                'if (!diff.includes("diff --git a/app/config.py b/app/config.py")) throw new Error("路径未规范化");',
+                'if (!diff.includes("@@ -0,0 +1,2 @@")) throw new Error("hunk 行数错误");',
+                'if (diff.includes("\\r")) throw new Error("未统一换行符");',
+                'for (const bad of ["../escape.py", "C:\\\\work\\\\bad.py", "app/not-python.txt"]) {',
+                '  let rejected = false; try { buildPythonFileDiff(bad, "print(1)"); } catch { rejected = true; }',
+                '  if (!rejected) throw new Error(`未拒绝非法路径 ${bad}`);',
+                '}',
+                'let emptyRejected = false; try { buildPythonFileDiff("app/empty.py", "   "); } catch { emptyRejected = true; }',
+                'if (!emptyRejected) throw new Error("未拒绝空文件");',
+                'if (DEMO_CASES.length !== 3) throw new Error("演示用例数量不正确");',
+                'console.log("PYTHON_FILE_INPUT_OK");',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    run = subprocess.run(
+        [node, str(script)],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert "PYTHON_FILE_INPUT_OK" in run.stdout
 
 
 

@@ -26,7 +26,7 @@ export function AuditPanel({
     React.createElement(
       "div",
       { className: "row" },
-      React.createElement("h2", { style: { flex: 1 } }, `审计事件（${filtered.length}）`),
+      React.createElement("h2", { style: { flex: 1 } }, `系统审计（${filtered.length}）`),
       React.createElement("button", { onClick: onRefresh }, "刷新"),
     ),
     React.createElement("input", {
@@ -36,7 +36,7 @@ export function AuditPanel({
     }),
     error ? React.createElement("div", { className: "error-box" }, error) : null,
     filtered.length === 0
-      ? React.createElement("div", { className: "muted" }, "暂无审计事件（需要 admin 角色）")
+      ? React.createElement("div", { className: "muted" }, "切换为“管理员”身份后可查看系统审计记录。")
       : React.createElement(
           "table",
           null,
